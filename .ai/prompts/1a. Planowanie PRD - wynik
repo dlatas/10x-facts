@@ -1,0 +1,100 @@
+<conversation_summary>
+<decisions>
+1. Produkt to webowa aplikacja do kolekcjonowania i przeglądania ciekawostek w formie fiszek (bez trybu nauki/spaced repetition); ma służyć „błysknięciu” ciekawostką i poszerzaniu horyzontów.
+2. Struktura danych: **Kategoria (kolekcja)** → wiele **Tematów** → wiele **Fiszek**. Brak zagnieżdżania, brak innych poziomów.
+3. Każdy temat ma **krótki opis w formie listy** zagadnień; opis jest **edytowalny** i jego aktualna wersja jest używana przy kolejnych generacjach AI.
+4. Format fiszki: **tytuł (front)** + **opis (back)**, bez dodatkowych pól treściowych.
+5. Fiszki mogą być tworzone **manualnie** (formularz) lub **generowane przez AI**; generowanie zawsze odbywa się **pojedynczo** (1 fiszka na akcję).
+6. W aplikacji istnieje systemowa, nieusuwalna i stała domyślna kategoria **„Kolekcja losowa”** z tematem **„Temat losowy”**, w którym AI losuje temat z listy zdefiniowanej w Backendzie i generuje pojedynczą losową ciekawostkę.
+7. Dla „Tematu losowego” losowość ma być „pełna” z perspektywy użytkownika (bez filtrów); dopuszczona jest **ukryta lista domen/obszarów** zdefiniowana po stronie backendu.
+8. Akcje na wygenerowanej fiszce: **„Zapisz”** (zawsze tworzy rekord fiszki) i **„Odrzuć”**; brak akcji traktowany jako **pominięcie** (nie liczone do akceptacji).
+9. Edycja fiszki: użytkownik może edytować tylko **tytuł i opis**; `source` jest stałe, dodatkowo jest flaga **`edited_by_user`** do metryk.
+10. Wyszukiwanie: proste, po **tytule i opisie**, bez normalizacji diakrytyków (np. „Slowo” ≠ „Słowo”), bez literówek.
+11. Listy i nawigacja: lista kategorii (wyszukiwanie po nazwie) → lista tematów (wyszukiwanie po nazwie) → lista fiszek (wyszukiwanie słowami kluczowymi) + filtr fiszek po `manually_created/auto_generated`.
+12. „Ulubione”: fiszka ma przełącznik ulubionych; można filtrować ulubione w obrębie tematu oraz wyświetlać **losowe ulubione** globalnie na dashboardzie (także z „Kolekcji losowej”).
+13. Operacje na kategoriach/tematach: dozwolone **usuwanie** kategorii/tematu oraz **zmiana opisu tematu**; brak zmiany nazw. Usunięcie tematu usuwa jego fiszki; usunięcie kategorii usuwa wszystkie tematy i fiszki w kategorii (**hard delete**).
+14. Konta użytkowników: logowanie **e-mail/hasło**, auth w oparciu o **Supabase**.
+15. Limity generacji: limit **łączny** per użytkownik na dobę, reset o **północy UTC**, wartość **X konfigurowalna** po stronie backendu; limit egzekwowany backendowo (odporność na „race clicks”).
+16. Ograniczenia długości (dla manualnych i AI): **tytuł 200 znaków**, **opis 600 znaków** (ma być krótko, „ciekawostkowo”).
+17. Metryki (na start) widoczne wyłącznie w **panelu admina**: (a) stosunek **akceptacji do odrzuceń** fiszek generowanych, (b) stosunek **auto_generated/manually_created**.
+18. Opcja bezpieczeństwa/jakości na start: minimalna (zgodnie z pierwotną propozycją „a)”), bez rozbudowanych źródeł/cytowań.
+</decisions>
+
+<matched_recommendations>
+1. Wprowadzić jednoznaczny mechanizm metryk jakości poprzez akcje na podglądzie: **Zapisz=akceptacja**, **Odrzuć=odrzucenie**, brak akcji = **pominięte**.
+2. Generowanie w MVP utrzymać jako **1 fiszka na klik** (zarówno w tematach użytkownika, jak i w „Temacie losowym”).
+3. Utrzymać „Temat losowy” jako funkcję systemową, a losowość kontrolować po stronie backendu poprzez **listę domen** (ukrytą dla usera).
+4. Rozdzielić pojęcia źródła i edycji: stałe `source` + flaga `edited_by_user`, aby metryki były spójne.
+5. Egzekwować limit dzienny wyłącznie backendowo poprzez **atomowy licznik** per user + data UTC oraz blokadę wieloklików po stronie UI.
+6. Zdefiniować minimalny schemat danych pod metryki i funkcje: `user_id`, powiązania z kategorią/tematem, `front/back`, `source`, `edited_by_user`, `is_favorite`, `created_at`.
+7. Zastosować proste wyszukiwanie (tytuł+opis) i prosty filtr po `favorite`, zgodnie z MVP i prostotą implementacji.
+8. Dodać dashboardowe „losowe ulubione” bez mechanizmu anty-powtórzeń (akceptowalne powtórki).
+</matched_recommendations>
+
+<prd_planning_summary>
+### a) Główne wymagania funkcjonalne produktu
+- **Zarządzanie strukturą**:
+  - Tworzenie wielu kategorii (kolekcji).
+  - W każdej kategorii: tworzenie tematów.
+  - Temat posiada **edytowalny opis** (lista zainteresowań/zagadnień).
+  - Usuwanie tematu usuwa wszystkie przypisane fiszki (hard delete).
+  - Usuwanie kategorii usuwa wszystkie tematy i fiszki w kategorii (hard delete).
+  - Brak zmiany nazw kategorii/tematów; jedyna edycja na temacie to **opis**.
+- **Fiszki**:
+  - Format: `front` (tytuł) + `back` (opis).
+  - Dodawanie manualne przez formularz.
+  - Generowanie AI: zawsze pojedyncza fiszka na akcję; w tematach użytkownika treść generacji bazuje na **aktualnym opisie tematu**.
+  - Ograniczenia długości (manual i AI): tytuł 200 znaków, opis 600 znaków.
+  - Edycja fiszki: tylko tytuł i opis; `source` stałe + `edited_by_user`.
+  - Ulubione: toggle na fiszce, filtrowanie ulubionych w temacie.
+- **Wyszukiwanie i przeglądanie**:
+  - Wyszukiwarka kategorii po nazwie.
+  - Wyszukiwarka tematów po nazwie.
+  - Wyszukiwanie fiszek po tytule i opisie.
+  - Brak normalizacji diakrytyków i literówek (strict match).
+  - Filtrowanie fiszek po `is_favorite` : true vs false.
+- **Systemowa losowość**:
+  - Stała, nieusuwalna „Kolekcja losowa” z „Tematem losowym”.
+  - W „Temacie losowym” AI losuje temat/domenę (z backendowej listy) i generuje pojedynczą fiszkę.
+- **Konta i auth**:
+  - Logowanie e-mail/hasło, Supabase Auth.
+- **Limity**:
+  - Limit łączny generacji per użytkownik na dobę, reset 00:00 UTC.
+  - Wartość X łatwo zmienialna w backendzie.
+  - Odporność na wieloklik/wyścigi po stronie backendu.
+- **Panel admina i metryki**:
+  - Panel admina pokazuje: (1) akceptacje vs odrzucenia dla fiszek AI, (2) udział auto vs manual.
+  - Akcje na wygenerowanej fiszce: „Zapisz” (zapisuje fiszkę i liczy jako akceptacja) / „Odrzuć” (liczy jako odrzucenie); brak akcji = pominięte.
+
+### b) Kluczowe historie użytkownika i ścieżki korzystania
+- **Tworzenie struktury**: użytkownik tworzy kategorię → dodaje temat → wpisuje opis listą zagadnień.
+- **Generowanie ciekawostki w temacie**: użytkownik wchodzi w temat → klika „Generuj” → dostaje 1 fiszkę → „Zapisz” albo „Odrzuć”.
+- **Edycja kierunku generacji**: użytkownik edytuje opis tematu → kolejne generacje używają nowego opisu.
+- **Dodanie manualne**: użytkownik w temacie wybiera „Dodaj fiszkę” → wypełnia tytuł/opis w limitach → zapisuje.
+- **Przeglądanie i wyszukiwanie**: user przegląda kategorie/tematy → wyszukuje fiszki w temacie → filtruje po ulubionych.
+- **Losowa ciekawostka**: user przechodzi do „Kolekcji losowej” → „Tematu losowego” → generuje 1 losową ciekawostkę.
+- **Ulubione i dashboard**: user oznacza fiszki jako ulubione; dashboard pokazuje losową paczkę ulubionych ze wszystkich kategorii (w tym systemowej).
+
+### c) Kryteria sukcesu i sposoby ich mierzenia
+- **Akceptacja AI**:
+  - Definicja: \(accept\_rate = \frac{\#Zapisz}{\#Zapisz + \#Odrzuć}\) (pominięte nie wchodzą do mianownika).
+  - Źródło danych: zdarzenia „Zapisz/Odrzuć” przy generacji AI + zapis fiszki.
+- **Udział AI w tworzeniu**:
+  - Definicja: \(ai\_share = \frac{\#auto\_generated}{\#auto\_generated + \#manually\_created}\).
+  - Źródło danych: pole `source` na fiszce.
+- **Widoczność metryk**: wyłącznie panel admina (na start).
+
+### d) Nierozwiązane kwestie / wymagające doprecyzowania
+- **Wartość limitu X** generacji/dzień (ustalisz po kosztach) oraz czy planujesz różne limity per rola/plan (na razie nie).
+- **Definicja i implementacja roli admina** (kto jest adminem i jak to będzie kontrolowane w Supabase).
+- **Dokładny zakres „minimalnej opcji jakości/bezpieczeństwa”** (co konkretnie oznacza wybrana opcja „a)” w implementacji: same disclaimery vs dodatkowe raportowanie/flagowanie).
+- **Sposób przechowywania i aktualizacji listy domen** dla „Tematu losowego” (hardcode/ENV/tabela w DB) – kierunek jest ustalony, ale forma wdrożenia do potwierdzenia.
+</prd_planning_summary>
+
+<unresolved_issues>
+1. Konkretny limit **X** generacji/dzień oraz mechanizm jego zmiany (gdzie trzymasz konfigurację: env/DB).
+2. Definicja i implementacja **admin access** w Supabase (role/claims/tabela).
+3. Doprecyzowanie „opcji a)” w zakresie jakości/bezpieczeństwa (co dokładnie robimy w MVP).
+4. Techniczna decyzja, gdzie trzymamy listę domen dla losowości (hardcode vs DB) i jak nią zarządzać operacyjnie.
+</unresolved_issues>
+</conversation_summary>
