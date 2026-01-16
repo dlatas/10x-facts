@@ -1,14 +1,14 @@
-import type { APIContext } from "astro";
+import type { APIContext } from 'astro';
 
-import { aiGenerateCommandSchema } from "../../../../lib/validation/ai-generation.schemas";
+import { aiGenerateCommandSchema } from '@/lib/validation/ai-generation.schemas';
 import {
   computeDailyLimit,
   generateProposalViaOpenRouter,
   getIsRandomTopic,
   insertAiGenerationEvent,
-} from "../../../../lib/services/ai-generation.service";
-import type { AiGenerateResponseDto } from "../../../../types";
-import { json, jsonError, readJsonBody, requireUserId } from "../../../../lib/http/api";
+} from '@/lib/services/ai-generation.service';
+import type { AiGenerateResponseDto } from '@/types';
+import { json, jsonError, readJsonBody, requireUserId } from '@/lib/http/api';
 
 export const prerender = false;
 
@@ -26,8 +26,11 @@ export async function POST(context: APIContext): Promise<Response> {
 
   const parsed = aiGenerateCommandSchema.safeParse(body.body);
   if (!parsed.success) {
-    return jsonError(400, "Body nie przechodzi walidacji.", {
-      issues: parsed.error.issues.map((i) => ({ path: i.path, message: i.message })),
+    return jsonError(400, 'Body nie przechodzi walidacji.', {
+      issues: parsed.error.issues.map((i) => ({
+        path: i.path,
+        message: i.message,
+      })),
     });
   }
 
@@ -35,38 +38,41 @@ export async function POST(context: APIContext): Promise<Response> {
 
   // 3) Authorization of resource (RLS + explicit 404 mapping)
   const { data: topic, error: topicError } = await supabase
-    .from("topics")
-    .select("id,name,description,system_key")
-    .eq("id", topic_id)
+    .from('topics')
+    .select('id,name,description,system_key')
+    .eq('id', topic_id)
     .maybeSingle();
 
-  if (topicError) return jsonError(500, "Błąd podczas odczytu tematu.");
-  if (!topic) return jsonError(404, "Nie znaleziono tematu.");
+  if (topicError) return jsonError(500, 'Błąd podczas odczytu tematu.');
+  if (!topic) return jsonError(404, 'Nie znaleziono tematu.');
 
   const isRandom = getIsRandomTopic(topic);
 
   // 4) Daily limit (counts events accepted/rejected/skipped)
   const dailyLimitRaw = import.meta.env.AI_DAILY_EVENT_LIMIT;
-  const dailyEventLimit = Math.max(1, Number.parseInt(dailyLimitRaw ?? "5", 10) || 5);
+  const dailyEventLimit = Math.max(
+    1,
+    Number.parseInt(dailyLimitRaw ?? '5', 10) || 5
+  );
 
   let limit;
   try {
     limit = await computeDailyLimit({ supabase, userId, dailyEventLimit });
   } catch {
-    return jsonError(500, "Nie udało się policzyć limitu dziennego.");
+    return jsonError(500, 'Nie udało się policzyć limitu dziennego.');
   }
 
   if (limit.remaining <= 0) {
-    return jsonError(429, "Przekroczono dzienny limit decyzji AI.", {
+    return jsonError(429, 'Przekroczono dzienny limit decyzji AI.', {
       limit: { remaining: 0, reset_at_utc: limit.resetAtUtc },
     });
   }
 
   // 5) Call OpenRouter
   const apiKey = import.meta.env.OPENROUTER_API_KEY;
-  if (!apiKey) return jsonError(500, "Brak konfiguracji OPENROUTER_API_KEY.");
+  if (!apiKey) return jsonError(500, 'Brak konfiguracji OPENROUTER_API_KEY.');
 
-  const model = import.meta.env.OPENROUTER_MODEL ?? "openai/gpt-4o-mini";
+  const model = import.meta.env.OPENROUTER_MODEL ?? 'openai/gpt-4o-mini';
 
   try {
     const proposal = await generateProposalViaOpenRouter({
@@ -89,7 +95,7 @@ export async function POST(context: APIContext): Promise<Response> {
         supabase,
         userId,
         topicId: topic_id,
-        status: "failed",
+        status: 'failed',
         isRandom,
         randomDomainLabel: null,
         model,
@@ -99,6 +105,9 @@ export async function POST(context: APIContext): Promise<Response> {
     }
 
     // In MVP: map upstream to 502 without leaking details.
-    return jsonError(502, "Błąd dostawcy AI (OpenRouter). Spróbuj ponownie później.");
+    return jsonError(
+      502,
+      'Błąd dostawcy AI (OpenRouter). Spróbuj ponownie później.'
+    );
   }
 }
