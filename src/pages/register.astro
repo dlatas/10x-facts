@@ -1,0 +1,11 @@
+---
+import AuthLayout from "@/layouts/AuthLayout.astro";
+import { RegisterForm } from "@/components/auth/RegisterForm";
+
+const next = Astro.url.searchParams.get("next");
+---
+
+<AuthLayout title="Rejestracja — 10x Facts">
+  <RegisterForm client:load next={next} />
+</AuthLayout>
+

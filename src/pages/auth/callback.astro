@@ -1,0 +1,29 @@
+---
+import AuthLayout from "@/layouts/AuthLayout.astro";
+---
+
+<AuthLayout title="Uwierzytelnianie — 10x Facts">
+  <div class="rounded-xl border bg-card text-card-foreground shadow-sm">
+    <div class="flex flex-col space-y-1.5 p-6">
+      <h1 class="text-lg font-semibold leading-none tracking-tight">
+        Trwa uwierzytelnianie…
+      </h1>
+      <p class="text-sm text-muted-foreground">
+        Ten ekran jest technicznym etapem procesu (np. po kliknięciu w link z
+        resetu hasła). W tej iteracji nie wymieniamy jeszcze kodu na sesję po
+        stronie serwera — podpinamy to później.
+      </p>
+    </div>
+
+    <div class="p-6 pt-0">
+      <p class="text-sm">
+        Jeśli nie nastąpi przekierowanie, przejdź do{' '}
+        <a class="font-medium underline underline-offset-4" href="/reset-password">
+          resetu hasła
+        </a>
+        .
+      </p>
+    </div>
+  </div>
+</AuthLayout>
+

@@ -1,7 +1,10 @@
 ---
-import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import AuthLayout from "@/layouts/AuthLayout.astro";
+import { LoginForm } from "@/components/auth/LoginForm";
+
+const next = Astro.url.searchParams.get("next");
 ---
 
-<DashboardLayout title="Dashboard — 10x Facts">
-  Log in
-</DashboardLayout>
+<AuthLayout title="Logowanie — 10x Facts">
+  <LoginForm client:load next={next} />
+</AuthLayout>

@@ -1,7 +1,7 @@
-import * as React from "react";
+import * as React from 'react';
 
-import type { CollectionDto, FavoriteFlashcardDto } from "@/types";
-import { createDashboardService } from "@/lib/services/dashboard-service";
+import type { CollectionDto, FavoriteFlashcardDto } from '@/types';
+import { createDashboardService } from '@/lib/services/dashboard-service';
 
 export interface DashboardDataState {
   collections: CollectionDto[];
@@ -11,11 +11,15 @@ export interface DashboardDataState {
   error: string | null;
 }
 
-export function useDashboardData(args?: { limitCollections?: number; limitFavorites?: number }) {
+export function useDashboardData(args?: {
+  limitCollections?: number;
+  limitFavorites?: number;
+}) {
   const limitCollections = args?.limitCollections ?? 6;
   const limitFavorites = args?.limitFavorites ?? 6;
 
-  const service = React.useMemo(() => createDashboardService(), []);
+  const [service, setService] = React.useState(() => createDashboardService());
+  const [didFallbackToMock, setDidFallbackToMock] = React.useState(false);
 
   const [state, setState] = React.useState<DashboardDataState>({
     collections: [],
@@ -47,17 +51,30 @@ export function useDashboardData(args?: { limitCollections?: number; limitFavori
       setState((s) => ({ ...s, collections, favorites, isLoading: false }));
     } catch (e) {
       const err = e as unknown;
-      if (err && typeof err === "object" && "status" in err && (err as { status?: number }).status === 401) {
-        window.location.href = "/login";
-        return;
+      if (
+        err &&
+        typeof err === 'object' &&
+        'status' in err &&
+        (err as { status?: number }).status === 401
+      ) {
+        // UI-only fallback: jeśli API jest w trybie "real" i wymaga auth (401),
+        // a auth nie jest jeszcze wdrożony, przełączamy się na mocki.
+        if (!didFallbackToMock) {
+          setDidFallbackToMock(true);
+          setService(createDashboardService({ mock: true }));
+          return;
+        }
       }
       setState((s) => ({
         ...s,
         isLoading: false,
-        error: err instanceof Error ? err.message : "Nie udało się załadować danych.",
+        error:
+          err instanceof Error
+            ? err.message
+            : 'Nie udało się załadować danych.',
       }));
     }
-  }, [limitCollections, limitFavorites, service]);
+  }, [didFallbackToMock, limitCollections, limitFavorites, service]);
 
   const createCollection = React.useCallback(
     async (name: string) => {
@@ -67,19 +84,30 @@ export function useDashboardData(args?: { limitCollections?: number; limitFavori
         await refreshCollections();
       } catch (e) {
         const err = e as unknown;
-        if (err && typeof err === "object" && "status" in err && (err as { status?: number }).status === 401) {
-          window.location.href = "/login";
-          return;
+        if (
+          err &&
+          typeof err === 'object' &&
+          'status' in err &&
+          (err as { status?: number }).status === 401
+        ) {
+          if (!didFallbackToMock) {
+            setDidFallbackToMock(true);
+            setService(createDashboardService({ mock: true }));
+            return;
+          }
         }
         setState((s) => ({
           ...s,
-          error: err instanceof Error ? err.message : "Nie udało się utworzyć kolekcji.",
+          error:
+            err instanceof Error
+              ? err.message
+              : 'Nie udało się utworzyć kolekcji.',
         }));
       } finally {
         setState((s) => ({ ...s, isCreatingCollection: false }));
       }
     },
-    [refreshCollections, service]
+    [didFallbackToMock, refreshCollections, service]
   );
 
   React.useEffect(() => {
