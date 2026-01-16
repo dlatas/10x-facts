@@ -1,0 +1,8 @@
+---
+import DashboardLayout from "../layouts/DashboardLayout.astro";
+import { DashboardClient } from "../components/dashboard/DashboardClient";
+---
+
+<DashboardLayout title="Dashboard — 10x Facts">
+  <DashboardClient client:load />
+</DashboardLayout>
