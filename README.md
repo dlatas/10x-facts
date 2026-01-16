@@ -49,6 +49,11 @@ Additional docs:
 - **CI/CD**: GitHub Actions
 - **Hosting**: DigitalOcean (Docker-based deployment)
 
+## Project structure (types)
+
+- `src/types.ts`: publiczny “barrel” eksportów typów (jeden punkt importu)
+- `src/types/*`: typy podzielone domenowo (auth, topics, flashcards, admin itd.)
+
 ## 4. Getting started locally
 
 ### Prerequisites

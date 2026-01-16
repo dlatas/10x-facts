@@ -291,7 +291,7 @@ Kryteria akceptacji:
 Opis: Jako użytkownik chcę rozumieć, że mam limit generacji dziennie, aby planować korzystanie z AI.
 Kryteria akceptacji:
 - Gdy użytkownik ma dostępne generacje, generowanie działa.
-- Podczas trwającego żądania generowania UI blokuje ponowne uruchomienie generowania (np. wyłącza przycisk), aby ograniczyć przypadkowe wielokliki.
+Na podstawie opisu MVP z @prd.md oraz stacku technologicznego z @tech-stack.md przygotuj prompt dla generatora proof of concept, który pozwoli nam zweryfikować podstawową funkcjonalność aplikacji czyli {{KEYFEATURE}}. Wyklucz wszystkie nadmiarowe funkcje. Zaznacz, aby generator rozplanował pracę i uzyskał moją akceptację zanim przejdzie do tworzenia PoC.
 - Gdy limit jest wykorzystany, generowanie jest zablokowane i pokazuje komunikat o limicie oraz informację o resecie o 00:00 UTC.
 
 
