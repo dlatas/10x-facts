@@ -1,94 +1,168 @@
-# 10x Astro Starter
+# 10xFacts
 
-A modern, opinionated starter template for building fast, accessible, and AI-friendly web applications.
+![version](https://img.shields.io/badge/version-0.0.1-blue)
+![license](https://img.shields.io/badge/license-TBD-lightgrey)
 
-## Tech Stack
+## Table of contents
 
-- [Astro](https://astro.build/) v5.5.5 - Modern web framework for building fast, content-focused websites
-- [React](https://react.dev/) v19.0.0 - UI library for building interactive components
-- [TypeScript](https://www.typescriptlang.org/) v5 - Type-safe JavaScript
-- [Tailwind CSS](https://tailwindcss.com/) v4.0.17 - Utility-first CSS framework
+- [1. Project name](#1-project-name)
+- [2. Project description](#2-project-description)
+- [3. Tech stack](#3-tech-stack)
+- [4. Getting started locally](#4-getting-started-locally)
+- [5. Available scripts](#5-available-scripts)
+- [6. Project scope](#6-project-scope)
+- [7. Project status](#7-project-status)
+- [8. License](#8-license)
 
-## Prerequisites
+## 1. Project name
 
-- Node.js v22.14.0 (as specified in `.nvmrc`)
-- npm (comes with Node.js)
+**10xFacts**
 
-## Getting Started
+## 2. Project description
 
-1. Clone the repository:
+10xFacts is a web app for collecting, browsing, and quickly discovering bite-sized facts in the form of flashcards. The product is designed for “quick discovery” (not memorization): it deliberately excludes learning modes like spaced repetition, quizzes, or tests.
+
+Core content model:
+
+- **Collection (category)** → **Topic** → **Flashcards**
+- **Flashcard** = title (front, max 200 chars) + description (back, max 600 chars)
+
+MVP highlights:
+
+- AI-powered generation of **exactly one** flashcard per user action (topic-based or fully random).
+- Manual creation of flashcards.
+- Simple browsing, strict search, basic filtering, and favorites.
+- User accounts for data persistence.
+- Admin panel with basic quality/adoption metrics.
+
+Additional docs:
+
+- PRD: `.ai/prd.md`
+- Tech stack notes: `.ai/tech-stack.md`
+
+## 3. Tech stack
+
+- **Frontend**: Astro 5 + React 19 (interactive components), TypeScript 5
+- **Styling/UI**: Tailwind CSS 4, shadcn/ui, Radix UI primitives
+- **Backend**: Supabase (PostgreSQL + Auth + SDK)
+- **AI**: OpenRouter.ai (model gateway)
+- **CI/CD**: GitHub Actions
+- **Hosting**: DigitalOcean (Docker-based deployment)
+
+## 4. Getting started locally
+
+### Prerequisites
+
+- **Node.js**: `22.14.0` (see `.nvmrc`)
+- **npm** (ships with Node)
+
+If you use NVM:
 
 ```bash
-git clone https://github.com/przeprogramowani/10x-astro-starter.git
-cd 10x-astro-starter
+nvm install
+nvm use
 ```
 
-2. Install dependencies:
+### Setup
+
+1. Install dependencies:
 
 ```bash
 npm install
 ```
 
-3. Run the development server:
+2. Create your environment file:
+
+- Copy `.env.example` to `.env`
+- Fill in required credentials (typically Supabase and OpenRouter)
+
+> Note: `.env.example` is the source of truth for required variables.
+
+3. Start the dev server:
 
 ```bash
 npm run dev
 ```
 
-4. Build for production:
+Then open the local URL printed in the terminal.
+
+### Production build (local)
 
 ```bash
 npm run build
+npm run preview
 ```
 
-## Available Scripts
+## 5. Available scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint issues
+From `package.json`:
 
-## Project Structure
+- **`npm run dev`**: start Astro dev server
+- **`npm run build`**: build for production
+- **`npm run preview`**: preview the production build locally
+- **`npm run lint`**: run ESLint
+- **`npm run lint:fix`**: run ESLint with auto-fix
+- **`npm run format`**: format codebase using Prettier
 
-```md
-.
-├── src/
-│   ├── layouts/    # Astro layouts
-│   ├── pages/      # Astro pages
-│   │   └── api/    # API endpoints
-│   ├── components/ # UI components (Astro & React)
-│   └── assets/     # Static assets
-├── public/         # Public assets
-```
+## 6. Project scope
 
-## AI Development Support
+### In scope (MVP)
 
-This project is configured with AI development tools to enhance the development experience, providing guidelines for:
+- **Auth & access**
+  - Email/password registration & login via Supabase Auth
+  - Per-user data isolation
+  - Admin-only access to the admin panel
+- **Collections & topics**
+  - Create collections and topics
+  - Topic description as a list of points; the latest description is used to guide future AI generations
+  - No renaming of collections/topics after creation (MVP constraint)
+  - Hard delete with cascade (delete topic → its flashcards; delete collection → topics + flashcards)
+- **Flashcards**
+  - Manual creation (title/description with 200/600 char limits)
+  - Edit title/description (with `edited_by_user` tracked for metrics)
+  - Hard delete
+  - Favorites toggle and filtering by favorites
+  - Filtering by source: `manually_created` vs `auto_generated`
+- **AI generation**
+  - Generate **exactly 1** flashcard per action
+  - For user topics: generation is guided by the topic description
+  - Accept/Reject flow:
+    - Accept = “Save” on the preview
+    - Reject = “Reject”
+    - Leaving without action = skip (not counted in acceptance rate)
+  - Daily per-user generation limit:
+    - Enforced in backend
+    - Resets at **00:00 UTC**
+- **Random mode**
+  - A system, non-removable “Random collection” with a “Random topic”
+  - Backend maintains a hidden list of domains for randomization
+- **Browsing, search & filtering**
+  - Lists for collections, topics, and flashcards
+  - Strict search (no diacritics normalization, no typo tolerance)
+- **Admin metrics**
+  - AI acceptance rate: \(accepts / (accepts + rejects)\), skips excluded
+  - AI vs manual share: \(auto\_generated / (auto\_generated + manually\_created)\)
 
-- Project structure
-- Coding practices
-- Frontend development
-- Styling with Tailwind
-- Accessibility best practices
-- Astro and React guidelines
+### Out of scope (explicitly not in MVP)
 
-### Cursor IDE
+- Sharing/collaboration between users
+- Native mobile apps (web-only)
+- Learning mode (spaced repetition), quizzes, tests
+- Advanced search (typo tolerance, diacritics normalization, stemming)
+- Fact verification / citations / advanced quality systems
+- Renaming collections/topics after creation
+- Nested collections, tags, extra hierarchy levels
 
-The project includes AI rules in `.cursor/rules/` directory that help Cursor IDE understand the project structure and provide better code suggestions.
+## 7. Project status
 
-### GitHub Copilot
+**MVP / in active development.**
 
-AI instructions for GitHub Copilot are available in `.github/copilot-instructions.md`
+Success metrics (as defined in PRD):
 
-### Windsurf
+- **AI acceptance rate target**: ≥ 75%
+- **AI usage share target**: ≥ 75%
 
-The `.windsurfrules` file contains AI configuration for Windsurf.
+## 8. License
 
-## Contributing
+**TBD.** No license file is currently provided in this repository.
 
-Please follow the AI guidelines and coding practices defined in the AI configuration files when contributing to this project.
-
-## License
-
-MIT
