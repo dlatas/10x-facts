@@ -1,8 +1,14 @@
 ---
 import AuthLayout from "@/layouts/AuthLayout.astro";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { getSafeNextPath } from "@/lib/http/redirect";
 
-const next = Astro.url.searchParams.get("next");
+const rawNext = Astro.url.searchParams.get("next");
+const next = getSafeNextPath(rawNext);
+
+if (Astro.locals.auth?.isAuthenticated) {
+  return Astro.redirect(next ?? "/dashboard");
+}
 ---
 
 <AuthLayout title="Logowanie — 10x Facts">

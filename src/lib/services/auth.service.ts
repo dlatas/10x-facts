@@ -19,10 +19,10 @@ class HttpError extends Error {
 }
 
 function getDefaultMockFlag(): boolean {
-  // Domyślnie mock=TRUE, bo backend dla auth może jeszcze nie istnieć.
+  // Domyślnie mock=FALSE, bo backend auth jest dostępny.
   const v = import.meta.env.PUBLIC_AUTH_API_MOCK;
-  if (typeof v !== 'string' || v.length === 0) return true;
-  return v !== 'false';
+  if (typeof v !== 'string' || v.length === 0) return false;
+  return v === 'true';
 }
 
 function sleep(ms: number): Promise<void> {
@@ -42,12 +42,30 @@ async function fetchJson<T>(args: {
 
   if (res.ok) return (await res.json()) as T;
 
-  const text = await res.text().catch(() => '');
-  if (res.status === 401) throw new HttpError(401, 'Brak autoryzacji (401).');
-  throw new HttpError(
-    res.status,
-    `Błąd API (${res.status}): ${text || res.statusText}`
-  );
+  let message = res.statusText || 'Nieznany błąd.';
+  const contentType = res.headers.get('Content-Type') ?? '';
+
+  if (contentType.includes('application/json')) {
+    const payload = await res.json().catch(() => null);
+    if (payload && typeof payload === 'object') {
+      const errorMessage =
+        (payload as { error?: { message?: string } }).error?.message ??
+        (payload as { message?: string }).message;
+      if (errorMessage && typeof errorMessage === 'string') {
+        message = errorMessage;
+      } else {
+        message = JSON.stringify(payload);
+      }
+    }
+  } else {
+    const text = await res.text().catch(() => '');
+    if (text) message = text;
+  }
+
+  if (res.status === 401) {
+    throw new HttpError(401, message || 'Brak autoryzacji (401).');
+  }
+  throw new HttpError(res.status, message);
 }
 
 export function createAuthService(opts?: AuthServiceOptions) {
@@ -73,6 +91,18 @@ export function createAuthService(opts?: AuthServiceOptions) {
         url: `${baseUrl}/api/v1/auth/login`,
         method: 'POST',
         body: { email, password },
+      });
+    },
+
+    async logout(): Promise<void> {
+      if (mock) {
+        await sleep(200);
+        return;
+      }
+
+      await fetchJson<unknown>({
+        url: `${baseUrl}/api/v1/auth/logout`,
+        method: 'POST',
       });
     },
 

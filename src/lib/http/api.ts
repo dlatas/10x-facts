@@ -35,14 +35,28 @@ export async function requireUserId(
   context: APIContext
 ): Promise<{ ok: true; userId: string } | { ok: false; response: Response }> {
   const token = getBearerToken(context.request);
-  if (!token) return { ok: false, response: jsonError(401, "Brak tokenu Bearer.") };
-
-  const { data: userData, error: userError } = await context.locals.supabase.auth.getUser(token);
-  if (userError || !userData.user) {
-    return { ok: false, response: jsonError(401, "Nieprawidłowy lub wygasły token.") };
+  if (token) {
+    const { data: userData, error: userError } =
+      await context.locals.supabase.auth.getUser(token);
+    if (userError || !userData.user) {
+      return {
+        ok: false,
+        response: jsonError(401, "Nieprawidłowy lub wygasły token."),
+      };
+    }
+    return { ok: true, userId: userData.user.id };
   }
 
-  return { ok: true, userId: userData.user.id };
+  const { data: sessionData, error: sessionError } =
+    await context.locals.supabase.auth.getUser();
+  if (sessionError || !sessionData.user) {
+    return {
+      ok: false,
+      response: jsonError(401, "Brak aktywnej sesji."),
+    };
+  }
+
+  return { ok: true, userId: sessionData.user.id };
 }
 
 export async function readJsonBody(

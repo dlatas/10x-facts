@@ -1,6 +1,10 @@
 ---
 import DashboardLayout from "@/layouts/DashboardLayout.astro";
 import { DashboardClient } from "@/components/dashboard/DashboardClient";
+
+if (!Astro.locals.auth?.isAuthenticated) {
+  return Astro.redirect('/login');
+}
 ---
 
 <DashboardLayout title="Dashboard — 10x Facts">

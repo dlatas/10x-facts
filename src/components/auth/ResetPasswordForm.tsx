@@ -1,7 +1,14 @@
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { createAuthService } from '@/lib/services/auth.service';
 
@@ -63,7 +70,9 @@ export function ResetPasswordForm() {
         window.location.assign('/login?reset=success');
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : 'Nie udało się zmienić hasła. Spróbuj ponownie.';
+          err instanceof Error
+            ? err.message
+            : 'Nie udało się zmienić hasła. Spróbuj ponownie.';
         setError(message);
       } finally {
         setIsLoading(false);
@@ -80,7 +89,11 @@ export function ResetPasswordForm() {
       </CardHeader>
 
       <CardContent>
-        <form className="grid gap-4" onSubmit={(e) => void submit(e)} noValidate>
+        <form
+          className="grid gap-4"
+          onSubmit={(e) => void submit(e)}
+          noValidate
+        >
           {error ? (
             <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {error}
@@ -88,7 +101,10 @@ export function ResetPasswordForm() {
           ) : null}
 
           <div className="grid gap-2">
-            <label htmlFor={passwordId} className="text-sm font-medium">
+            <label
+              htmlFor={passwordId}
+              className="text-sm font-medium"
+            >
               Nowe hasło
             </label>
             <Input
@@ -99,18 +115,26 @@ export function ResetPasswordForm() {
               disabled={isLoading}
               placeholder="min. 8 znaków"
               aria-invalid={passwordError ? true : undefined}
-              aria-describedby={passwordError ? `${passwordId}-error` : undefined}
+              aria-describedby={
+                passwordError ? `${passwordId}-error` : undefined
+              }
               onChange={(e) => setPassword(e.currentTarget.value)}
             />
             {passwordError ? (
-              <p id={`${passwordId}-error`} className="text-sm text-destructive">
+              <p
+                id={`${passwordId}-error`}
+                className="text-sm text-destructive"
+              >
                 {passwordError}
               </p>
             ) : null}
           </div>
 
           <div className="grid gap-2">
-            <label htmlFor={confirmId} className="text-sm font-medium">
+            <label
+              htmlFor={confirmId}
+              className="text-sm font-medium"
+            >
               Potwierdź hasło
             </label>
             <Input
@@ -124,13 +148,19 @@ export function ResetPasswordForm() {
               onChange={(e) => setConfirmPassword(e.currentTarget.value)}
             />
             {confirmError ? (
-              <p id={`${confirmId}-error`} className="text-sm text-destructive">
+              <p
+                id={`${confirmId}-error`}
+                className="text-sm text-destructive"
+              >
                 {confirmError}
               </p>
             ) : null}
           </div>
 
-          <Button type="submit" disabled={isLoading}>
+          <Button
+            type="submit"
+            disabled={isLoading}
+          >
             {isLoading ? 'Zapisywanie…' : 'Zapisz nowe hasło'}
           </Button>
         </form>
@@ -144,4 +174,3 @@ export function ResetPasswordForm() {
     </Card>
   );
 }
-

@@ -9,10 +9,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { createAuthService } from '@/lib/services/auth.service';
 
 export function UserAvatarMenu(props: { email?: string | null }) {
   const email = props.email ?? null;
   const letter = (email?.trim()?.[0] ?? 'U').toUpperCase();
+  const auth = React.useMemo(() => createAuthService(), []);
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const onLogout = React.useCallback(async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      await auth.logout();
+      window.location.assign('/login');
+    } catch {
+      setIsLoading(false);
+    }
+  }, [auth, isLoading]);
 
   return (
     <DropdownMenu>
@@ -36,8 +50,14 @@ export function UserAvatarMenu(props: { email?: string | null }) {
         <DropdownMenuItem asChild>
           <a href="/user">User profile</a>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <a href="/login">Log out</a>
+        <DropdownMenuItem
+          onSelect={(event) => {
+            event.preventDefault();
+            void onLogout();
+          }}
+          disabled={isLoading}
+        >
+          {isLoading ? 'Wylogowywanie…' : 'Wyloguj się'}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { getSafeNextPath } from '@/lib/http/redirect';
 import { createAuthService } from '@/lib/services/auth.service';
 
 function isValidEmail(value: string): boolean {
@@ -78,9 +79,7 @@ export function LoginForm(props: { next?: string | null }) {
       setError(null);
       try {
         await auth.login({ email, password });
-        const target = (
-          next && next.trim().length > 0 ? next : '/dashboard'
-        ) as string;
+        const target = getSafeNextPath(next) ?? '/dashboard';
         window.location.assign(target);
       } catch (err) {
         const message =
