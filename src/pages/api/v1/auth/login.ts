@@ -6,14 +6,29 @@ import type { OkResponse } from '@/types/common';
 
 export const prerender = false;
 
-function mapLoginError(status?: number | null): { status: number; message: string } {
+function mapLoginError(status?: number | null): {
+  status: number;
+  message: string;
+} {
   if (status === 429) {
-    return { status: 429, message: 'Zbyt wiele prób. Spróbuj ponownie później.' };
+    return {
+      status: 429,
+      message: 'Zbyt wiele prób. Spróbuj ponownie później.',
+    };
   }
   if (status === 400 || status === 401) {
     return { status: 401, message: 'Nieprawidłowy e-mail lub hasło.' };
   }
   return { status: 500, message: 'Wystąpił błąd. Spróbuj ponownie.' };
+}
+
+function isEmailNotConfirmed(message?: string | null): boolean {
+  if (!message) return false;
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('email') &&
+    (normalized.includes('confirm') || normalized.includes('confirmation'))
+  );
 }
 
 export async function POST(context: APIContext): Promise<Response> {
@@ -39,6 +54,12 @@ export async function POST(context: APIContext): Promise<Response> {
   });
 
   if (error || !data.user || !data.session) {
+    if (isEmailNotConfirmed(error?.message ?? null)) {
+      return jsonError(
+        401,
+        'Konto nie zostało jeszcze potwierdzone. Sprawdź e-mail i kliknij link aktywacyjny.'
+      );
+    }
     const mapped = mapLoginError(error?.status ?? null);
     return jsonError(mapped.status, mapped.message);
   }

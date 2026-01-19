@@ -106,7 +106,10 @@ export function createAuthService(opts?: AuthServiceOptions) {
       });
     },
 
-    async signup(command: { email: string; password: string }): Promise<void> {
+    async signup(command: {
+      email: string;
+      password: string;
+    }): Promise<{ requiresEmailConfirmation: boolean }> {
       const email = command?.email?.trim?.() ?? '';
       const password = command?.password ?? '';
       if (!email || !password) throw new Error('Podaj e-mail i hasło.');
@@ -117,14 +120,19 @@ export function createAuthService(opts?: AuthServiceOptions) {
         if (email.toLowerCase().includes('exists')) {
           throw new HttpError(409, 'Konto z tym adresem e-mail już istnieje.');
         }
-        return;
+        return { requiresEmailConfirmation: true };
       }
 
-      await fetchJson<unknown>({
+      const payload = await fetchJson<{
+        requiresEmailConfirmation?: boolean;
+      }>({
         url: `${baseUrl}/api/v1/auth/signup`,
         method: 'POST',
         body: { email, password },
       });
+      return {
+        requiresEmailConfirmation: Boolean(payload?.requiresEmailConfirmation),
+      };
     },
 
     async requestPasswordReset(command: { email: string }): Promise<void> {

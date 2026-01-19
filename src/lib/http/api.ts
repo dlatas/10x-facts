@@ -1,16 +1,20 @@
-import type { APIContext } from "astro";
+import type { APIContext } from 'astro';
 
 export function json(data: unknown, init?: ResponseInit): Response {
   return new Response(JSON.stringify(data), {
     ...init,
     headers: {
-      "Content-Type": "application/json; charset=utf-8",
+      'Content-Type': 'application/json; charset=utf-8',
       ...(init?.headers ?? {}),
     },
   });
 }
 
-export function jsonError(status: number, message: string, extra?: Record<string, unknown>): Response {
+export function jsonError(
+  status: number,
+  message: string,
+  extra?: Record<string, unknown>
+): Response {
   return json(
     {
       error: {
@@ -23,11 +27,11 @@ export function jsonError(status: number, message: string, extra?: Record<string
 }
 
 export function getBearerToken(req: Request): string | null {
-  const h = req.headers.get("authorization");
+  const h = req.headers.get('authorization');
   if (!h) return null;
-  const [scheme, ...rest] = h.split(" ");
-  if (scheme?.toLowerCase() !== "bearer") return null;
-  const token = rest.join(" ").trim();
+  const [scheme, ...rest] = h.split(' ');
+  if (scheme?.toLowerCase() !== 'bearer') return null;
+  const token = rest.join(' ').trim();
   return token.length > 0 ? token : null;
 }
 
@@ -41,7 +45,7 @@ export async function requireUserId(
     if (userError || !userData.user) {
       return {
         ok: false,
-        response: jsonError(401, "Nieprawidłowy lub wygasły token."),
+        response: jsonError(401, 'Nieprawidłowy lub wygasły token.'),
       };
     }
     return { ok: true, userId: userData.user.id };
@@ -52,7 +56,7 @@ export async function requireUserId(
   if (sessionError || !sessionData.user) {
     return {
       ok: false,
-      response: jsonError(401, "Brak aktywnej sesji."),
+      response: jsonError(401, 'Brak aktywnej sesji.'),
     };
   }
 
@@ -66,6 +70,9 @@ export async function readJsonBody(
     const body = await context.request.json();
     return { ok: true, body };
   } catch {
-    return { ok: false, response: jsonError(400, "Nieprawidłowy JSON w body.") };
+    return {
+      ok: false,
+      response: jsonError(400, 'Nieprawidłowy JSON w body.'),
+    };
   }
 }

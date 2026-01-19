@@ -4,7 +4,10 @@ const emailSchema = z
   .string()
   .transform((v) => v.trim())
   .refine((v) => v.length > 0, 'E-mail jest wymagany.')
-  .refine((v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), 'Podaj poprawny adres e-mail.');
+  .refine(
+    (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+    'Podaj poprawny adres e-mail.'
+  );
 
 const passwordSchema = z
   .string()

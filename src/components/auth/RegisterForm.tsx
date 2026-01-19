@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { getSafeNextPath } from '@/lib/http/redirect';
 import { createAuthService } from '@/lib/services/auth.service';
 
 function isValidEmail(value: string): boolean {
@@ -20,6 +21,7 @@ function isValidEmail(value: string): boolean {
 
 export function RegisterForm(props: { next?: string | null }) {
   const next = props.next ?? null;
+  const safeNext = getSafeNextPath(next);
   const auth = React.useMemo(() => createAuthService(), []);
 
   const emailId = React.useId();
@@ -28,11 +30,16 @@ export function RegisterForm(props: { next?: string | null }) {
 
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [confirmPassword, setConfirmPassword] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
 
   const [error, setError] = React.useState<string | null>(null);
+  const [success, setSuccess] = React.useState<string | null>(null);
   const [emailError, setEmailError] = React.useState<string | null>(null);
   const [passwordError, setPasswordError] = React.useState<string | null>(null);
+  const [confirmPasswordError, setConfirmPasswordError] = React.useState<
+    string | null
+  >(null);
 
   React.useEffect(() => {
     const t = window.setTimeout(() => emailRef.current?.focus(), 0);
@@ -41,11 +48,14 @@ export function RegisterForm(props: { next?: string | null }) {
 
   const validate = React.useCallback((): boolean => {
     setError(null);
+    setSuccess(null);
     setEmailError(null);
     setPasswordError(null);
+    setConfirmPasswordError(null);
 
     const e = email.trim();
     const p = password;
+    const c = confirmPassword;
 
     let ok = true;
     if (!e) {
@@ -64,8 +74,16 @@ export function RegisterForm(props: { next?: string | null }) {
       ok = false;
     }
 
+    if (!c) {
+      setConfirmPasswordError('Potwierdzenie hasła jest wymagane.');
+      ok = false;
+    } else if (p && c !== p) {
+      setConfirmPasswordError('Hasła nie są identyczne.');
+      ok = false;
+    }
+
     return ok;
-  }, [email, password]);
+  }, [confirmPassword, email, password]);
 
   const submit = React.useCallback(
     async (e: React.FormEvent) => {
@@ -76,10 +94,14 @@ export function RegisterForm(props: { next?: string | null }) {
       setIsLoading(true);
       setError(null);
       try {
-        await auth.signup({ email, password });
-        const target = (
-          next && next.trim().length > 0 ? next : '/dashboard'
-        ) as string;
+        const result = await auth.signup({ email, password });
+        if (result.requiresEmailConfirmation) {
+          setSuccess(
+            'Wysłaliśmy e-mail z linkiem potwierdzającym. Sprawdź skrzynkę (także spam) i aktywuj konto, aby się zalogować.'
+          );
+          return;
+        }
+        const target = safeNext ?? '/dashboard';
         window.location.assign(target);
       } catch (err) {
         const message =
@@ -91,8 +113,12 @@ export function RegisterForm(props: { next?: string | null }) {
         setIsLoading(false);
       }
     },
-    [auth, email, isLoading, next, password, validate]
+    [auth, email, isLoading, password, safeNext, validate]
   );
+
+  const showLoginHint =
+    error?.toLowerCase().includes('konto z tym adresem e-mail już istnieje') ??
+    false;
 
   return (
     <Card>
@@ -111,7 +137,23 @@ export function RegisterForm(props: { next?: string | null }) {
         >
           {error ? (
             <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {error}
+              <p>{error}</p>
+              {showLoginHint ? (
+                <a
+                  className="mt-2 inline-flex text-sm font-medium text-foreground underline underline-offset-4"
+                  href="/login"
+                >
+                  Masz już konto? Zaloguj się
+                </a>
+              ) : null}
+            </div>
+          ) : null}
+          {success ? (
+            <div
+              className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700"
+              aria-live="polite"
+            >
+              {success}
             </div>
           ) : null}
 
@@ -155,6 +197,7 @@ export function RegisterForm(props: { next?: string | null }) {
               type="password"
               value={password}
               disabled={isLoading}
+              autoComplete="new-password"
               placeholder="min. 8 znaków"
               aria-invalid={passwordError ? true : undefined}
               aria-describedby={
@@ -168,6 +211,36 @@ export function RegisterForm(props: { next?: string | null }) {
                 className="text-sm text-destructive"
               >
                 {passwordError}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="grid gap-2">
+            <label
+              className="text-sm font-medium"
+              htmlFor={`${passwordId}-confirm`}
+            >
+              Powtórz hasło
+            </label>
+            <Input
+              id={`${passwordId}-confirm`}
+              type="password"
+              value={confirmPassword}
+              disabled={isLoading}
+              autoComplete="new-password"
+              placeholder="powtórz hasło"
+              aria-invalid={confirmPasswordError ? true : undefined}
+              aria-describedby={
+                confirmPasswordError ? `${passwordId}-confirm-error` : undefined
+              }
+              onChange={(e) => setConfirmPassword(e.currentTarget.value)}
+            />
+            {confirmPasswordError ? (
+              <p
+                id={`${passwordId}-confirm-error`}
+                className="text-sm text-destructive"
+              >
+                {confirmPasswordError}
               </p>
             ) : null}
           </div>

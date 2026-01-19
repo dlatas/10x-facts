@@ -126,6 +126,7 @@ export function LoginForm(props: { next?: string | null }) {
               type="email"
               value={email}
               disabled={isLoading}
+              autoComplete="email"
               placeholder="twoj@email.com"
               aria-invalid={emailError ? true : undefined}
               aria-describedby={emailError ? `${emailId}-error` : undefined}
@@ -153,6 +154,7 @@ export function LoginForm(props: { next?: string | null }) {
               type="password"
               value={password}
               disabled={isLoading}
+              autoComplete="current-password"
               placeholder="••••••••"
               aria-invalid={passwordError ? true : undefined}
               aria-describedby={
