@@ -1,18 +1,20 @@
 ---
-import MainLayout from "@/layouts/MainLayout.astro";
+import MainLayout from '@/layouts/MainLayout.astro';
 
 interface Props {
   title?: string;
 }
 
-const { title = "Auth — 10x Facts" } = Astro.props;
+const { title = 'Auth — 10x Facts' } = Astro.props;
 ---
 
 <MainLayout title={title}>
   <div class="min-h-screen bg-background text-foreground">
-    <main class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
+    <main
+      class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6"
+    >
       <div class="flex w-full max-w-[420px] flex-col gap-10 sm:max-w-[480px]">
-        <div class="text-center text-sm font-semibold tracking-tight">
+        <div class="text-center text-3xl font-semibold tracking-tight">
           10x Facts
         </div>
         <slot />
@@ -20,4 +22,3 @@ const { title = "Auth — 10x Facts" } = Astro.props;
     </main>
   </div>
 </MainLayout>
-

@@ -36,7 +36,7 @@ export function getBearerToken(req: Request): string | null {
 }
 
 export async function requireUserId(
-  context: APIContext
+      context: APIContext
 ): Promise<{ ok: true; userId: string } | { ok: false; response: Response }> {
   const token = getBearerToken(context.request);
   if (token) {
