@@ -83,6 +83,11 @@ npm install
 
 > Note: `.env.example` is the source of truth for required variables.
 
+Dashboard note:
+
+- To use **real dashboard API calls** (collections + random favorite flashcards), set `PUBLIC_DASHBOARD_API_MOCK=false` in your `.env`.
+  - If it's missing, the UI defaults to **mock data** to allow development without a working backend.
+
 3. Start the dev server:
 
 ```bash
@@ -90,6 +95,41 @@ npm run dev
 ```
 
 Then open the local URL printed in the terminal.
+
+### Supabase (local dev) + migrations
+
+This repo uses Supabase locally via the Supabase CLI.
+
+1. Start local Supabase:
+
+```bash
+npx supabase start
+```
+
+2. Apply migrations (this will recreate the local DB and run all migrations + seed):
+
+```bash
+npx supabase db reset
+```
+
+If you only need to ensure the latest migrations are applied (without a full reset), you can run:
+
+```bash
+npx supabase migration up
+```
+
+### RPC: random favorite flashcards
+
+Endpoint `GET /api/v1/flashcards/favorites/random` prefers an RPC function in DB:
+
+- SQL function: `public.get_random_favorite_flashcards(p_limit int)`
+- Migration file: `supabase/migrations/20260120000200_add_random_favorite_flashcards_rpc.sql`
+
+After running migrations, you can quickly test it (replace `<TOKEN>`):
+
+```bash
+curl -i -H "Authorization: Bearer <TOKEN>" "http://127.0.0.1:3000/api/v1/flashcards/favorites/random?limit=5"
+```
 
 ### Production build (local)
 
