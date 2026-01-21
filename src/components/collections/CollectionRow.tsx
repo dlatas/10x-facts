@@ -12,7 +12,7 @@ export interface CollectionRowProps {
 
 export const CollectionRow = React.memo(function CollectionRow(props: CollectionRowProps) {
   const canDelete = !props.item.isSystem;
-  const topicsHref = `/collections/${encodeURIComponent(props.item.id)}/topics`;
+  const topicsHref = `/collections/${encodeURIComponent(props.item.id)}/topics?collectionName=${encodeURIComponent(props.item.name)}`;
 
   return (
     <Card>

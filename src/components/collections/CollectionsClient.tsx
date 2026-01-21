@@ -7,6 +7,7 @@ import { CollectionsList } from '@/components/collections/CollectionsList';
 import { CollectionsListState } from '@/components/collections/CollectionsListState';
 import { CreateCollectionDialog } from '@/components/collections/CreateCollectionDialog';
 import { DeleteCollectionConfirmDialog } from '@/components/collections/DeleteCollectionConfirmDialog';
+import { toast } from 'sonner';
 
 export function CollectionsClient() {
   const [queryClient] = React.useState(() => new QueryClient());
@@ -23,6 +24,22 @@ function CollectionsClientInner() {
 
   const isBusy = view.isCreating || view.isDeleting;
   const isEmpty = view.status === 'ready' && view.items.length === 0;
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    const reason = url.searchParams.get('reason');
+    if (!reason) return;
+
+    if (reason === 'collection_not_found') {
+      toast.error('Nie znaleziono kolekcji.');
+    } else {
+      toast.error('Nie udało się wykonać akcji.');
+    }
+
+    url.searchParams.delete('reason');
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+  }, []);
 
   return (
     <main className="p-4 md:p-8">

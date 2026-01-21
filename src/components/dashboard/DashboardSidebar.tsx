@@ -11,7 +11,8 @@ const RANDOM_COLLECTION_LABEL = "Kolekcja Losowa";
 function CollectionItem(props: { collection: CollectionDto }) {
   const isRandom = props.collection.system_key === RANDOM_SYSTEM_KEY;
   const isSystem = props.collection.system_key != null;
-  const href = `/collections/${encodeURIComponent(props.collection.id)}/topics`;
+  const displayName = isRandom ? RANDOM_COLLECTION_LABEL : props.collection.name;
+  const href = `/collections/${encodeURIComponent(props.collection.id)}/topics?collectionName=${encodeURIComponent(displayName)}`;
 
   return (
     <li className="rounded-md">
@@ -20,7 +21,7 @@ function CollectionItem(props: { collection: CollectionDto }) {
         className="flex items-center gap-2 truncate rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground"
       >
         <span className="truncate">
-          {isRandom ? RANDOM_COLLECTION_LABEL : props.collection.name}
+          {displayName}
         </span>
         {isSystem ? <SystemBadge systemKey={props.collection.system_key} /> : null}
       </a>
