@@ -10,7 +10,7 @@ import type {
 interface DashboardServiceOptions {
   /**
    * Gdy true – serwis używa mocków zamiast realnych endpointów.
-   * Domyślnie włącza się, jeśli nie ustawiono PUBLIC_DASHBOARD_API_MOCK=false.
+   * Domyślnie jest wyłączone (dashboard ma używać realnego API).
    */
   mock?: boolean;
   /**
@@ -32,10 +32,10 @@ class HttpError extends Error {
 }
 
 function getDefaultMockFlag(): boolean {
-  // Domyślnie mock=TRUE, bo backend dla tych endpointów może jeszcze nie istnieć (zgodnie z planem).
+  // Domyślnie mock=FALSE, bo endpointy są dostępne (collections + favorites/random).
   const v = import.meta.env.PUBLIC_DASHBOARD_API_MOCK;
-  if (typeof v !== 'string' || v.length === 0) return true;
-  return v !== 'false';
+  if (typeof v !== 'string' || v.length === 0) return false;
+  return v === 'true';
 }
 
 async function fetchJson<T>(args: {
@@ -176,7 +176,7 @@ export function createDashboardService(opts?: DashboardServiceOptions) {
         return mockCollections.slice(0, Math.max(0, limit));
       }
 
-      const url = `${baseUrl}/api/v1/collections?limit=${encodeURIComponent(String(limit))}`;
+      const url = `${baseUrl}/api/v1/collections?limit=${encodeURIComponent(String(limit))}&sort=updated_at&order=desc`;
       const json = await fetchJson<CollectionsListResponseDto>({
         url,
         accessToken,

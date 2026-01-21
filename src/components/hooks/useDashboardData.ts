@@ -11,6 +11,11 @@ export interface DashboardDataState {
   error: string | null;
 }
 
+function redirectToLogin(): void {
+  if (typeof window === 'undefined') return;
+  window.location.assign('/login');
+}
+
 export function useDashboardData(args?: {
   limitCollections?: number;
   limitFavorites?: number;
@@ -18,8 +23,7 @@ export function useDashboardData(args?: {
   const limitCollections = args?.limitCollections ?? 6;
   const limitFavorites = args?.limitFavorites ?? 6;
 
-  const [service, setService] = React.useState(() => createDashboardService());
-  const [didFallbackToMock, setDidFallbackToMock] = React.useState(false);
+  const service = React.useMemo(() => createDashboardService(), []);
 
   const [state, setState] = React.useState<DashboardDataState>({
     collections: [],
@@ -51,17 +55,10 @@ export function useDashboardData(args?: {
       setState((s) => ({ ...s, collections, favorites, isLoading: false }));
     } catch (e) {
       const err = e as unknown;
-      if (
-        err &&
-        typeof err === 'object' &&
-        'status' in err &&
-        (err as { status?: number }).status === 401
-      ) {
-        // UI-only fallback: jeśli API jest w trybie "real" i wymaga auth (401),
-        // a auth nie jest jeszcze wdrożony, przełączamy się na mocki.
-        if (!didFallbackToMock) {
-          setDidFallbackToMock(true);
-          setService(createDashboardService({ mock: true }));
+      if (err && typeof err === 'object' && 'status' in err) {
+        const status = (err as { status?: number }).status;
+        if (status === 401) {
+          redirectToLogin();
           return;
         }
       }
@@ -74,7 +71,7 @@ export function useDashboardData(args?: {
             : 'Nie udało się załadować danych.',
       }));
     }
-  }, [didFallbackToMock, limitCollections, limitFavorites, service]);
+  }, [limitCollections, limitFavorites, service]);
 
   const createCollection = React.useCallback(
     async (name: string) => {
@@ -84,15 +81,10 @@ export function useDashboardData(args?: {
         await refreshCollections();
       } catch (e) {
         const err = e as unknown;
-        if (
-          err &&
-          typeof err === 'object' &&
-          'status' in err &&
-          (err as { status?: number }).status === 401
-        ) {
-          if (!didFallbackToMock) {
-            setDidFallbackToMock(true);
-            setService(createDashboardService({ mock: true }));
+        if (err && typeof err === 'object' && 'status' in err) {
+          const status = (err as { status?: number }).status;
+          if (status === 401) {
+            redirectToLogin();
             return;
           }
         }
@@ -107,7 +99,7 @@ export function useDashboardData(args?: {
         setState((s) => ({ ...s, isCreatingCollection: false }));
       }
     },
-    [didFallbackToMock, refreshCollections, service]
+    [refreshCollections, service]
   );
 
   React.useEffect(() => {

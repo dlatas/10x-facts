@@ -1,10 +1,10 @@
-﻿import type { PostgrestError } from '@supabase/supabase-js';
+import type { PostgrestError } from '@supabase/supabase-js';
 
 import type { SupabaseClient } from '@/db/supabase.client';
 import type { CollectionDto, CollectionsListQuery } from '@/types';
 
 export class CollectionsServiceError extends Error {
-  readonly kind: 'not_found' | 'forbidden_system';
+  readonly kind: 'not_found' | 'forbidden_system' | 'forbidden_delete';
 
   constructor(kind: CollectionsServiceError['kind'], message: string) {
     super(message);
@@ -61,6 +61,9 @@ export async function listCollections(
   }
 
   const { data, error, count } = await q
+    // Systemowe kolekcje (np. Random) zawsze na górze listy.
+    // Dzięki temu dashboard z małym limitem zawsze pokaże „Random”.
+    .order('system_key', { ascending: false, nullsFirst: false })
     .order(args.sort, { ascending: args.order === 'asc' })
     .range(args.offset, rangeTo);
 
@@ -114,13 +117,34 @@ export async function deleteCollection(args: {
     );
   }
 
-  const { error: deleteError } = await args.supabase
+  // Uwaga: PostgREST może zwrócić sukces nawet gdy 0 wierszy spełnia filtr (np. przy RLS).
+  // Najpewniej jest sprawdzić `count`, a w razie 0 rozróżnić:
+  // - rekord nadal istnieje -> RLS / brak uprawnień (403)
+  // - rekord zniknął -> race / już usunięty (404)
+  const { error: deleteError, count } = await args.supabase
     .from('collections')
-    .delete()
+    .delete({ count: 'exact' })
     .eq('id', args.collectionId)
     .eq('user_id', args.userId);
 
   if (deleteError) throw deleteError;
+  if (count === 1) return;
+
+  const { data: stillThere, error: recheckError } = await args.supabase
+    .from('collections')
+    .select('id')
+    .eq('id', args.collectionId)
+    .eq('user_id', args.userId)
+    .maybeSingle();
+  if (recheckError) throw recheckError;
+
+  if (stillThere) {
+    throw new CollectionsServiceError(
+      'forbidden_delete',
+      'Brak uprawnień do usunięcia kolekcji (polityka RLS).'
+    );
+  }
+  throw new CollectionsServiceError('not_found', 'Nie znaleziono kolekcji.');
 }
 
 export function isUniqueViolation(

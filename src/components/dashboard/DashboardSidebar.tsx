@@ -3,11 +3,27 @@ import * as React from "react";
 import type { CollectionDto } from "@/types";
 import { Button } from "@/components/ui/button";
 import { CreateCollectionInline } from "@/components/dashboard/CreateCollectionInline";
+import { SystemBadge } from "@/components/collections/SystemBadge";
+
+const RANDOM_SYSTEM_KEY = "random_collection";
+const RANDOM_COLLECTION_LABEL = "Kolekcja Losowa";
 
 function CollectionItem(props: { collection: CollectionDto }) {
+  const isRandom = props.collection.system_key === RANDOM_SYSTEM_KEY;
+  const isSystem = props.collection.system_key != null;
+  const href = `/collections/${encodeURIComponent(props.collection.id)}/topics`;
+
   return (
-    <li className="truncate rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground">
-      {props.collection.name}
+    <li className="rounded-md">
+      <a
+        href={href}
+        className="flex items-center gap-2 truncate rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+      >
+        <span className="truncate">
+          {isRandom ? RANDOM_COLLECTION_LABEL : props.collection.name}
+        </span>
+        {isSystem ? <SystemBadge systemKey={props.collection.system_key} /> : null}
+      </a>
     </li>
   );
 }
@@ -39,10 +55,6 @@ export function DashboardSidebar(props: {
         </Button>
       </div>
 
-      <div className="mt-3">
-        <CreateCollectionInline onCreate={props.onCollectionCreate} isLoading={props.isCreatingCollection ?? false} />
-      </div>
-
       <div className="mt-4">
         {props.isLoading ? (
           <div className="space-y-2">
@@ -53,6 +65,13 @@ export function DashboardSidebar(props: {
         ) : (
           <CollectionList collections={props.collections} />
         )}
+      </div>
+
+      <div className="mt-3">
+        <CreateCollectionInline
+          onCreate={props.onCollectionCreate}
+          isLoading={props.isCreatingCollection ?? false}
+        />
       </div>
     </aside>
   );

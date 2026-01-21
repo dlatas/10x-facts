@@ -12,6 +12,7 @@ export function CreateCollectionInline(props: {
   const [value, setValue] = React.useState('');
   const inputId = React.useId();
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   const isLoading = props.isLoading ?? false;
 
@@ -32,9 +33,13 @@ export function CreateCollectionInline(props: {
     if (isLoading) return;
     const name = value.trim();
     if (!name) return;
-    await props.onCreate(name);
-    setIsEditing(false);
-    setValue('');
+    try {
+      await props.onCreate(name);
+      setIsEditing(false);
+      setValue('');
+    } catch {
+      // Błąd jest obsługiwany wyżej (np. w dashboard state); zostawiamy edycję otwartą.
+    }
   }, [isLoading, props, value]);
 
   if (!isEditing) {
@@ -53,7 +58,16 @@ export function CreateCollectionInline(props: {
   }
 
   return (
-    <div className="flex w-full items-center gap-2">
+    <div
+      ref={containerRef}
+      className="flex w-full items-center gap-2"
+      onBlur={(e) => {
+        // Nie zamykaj, jeśli focus przechodzi na przycisk w tym samym komponencie.
+        const next = e.relatedTarget as Node | null;
+        if (next && containerRef.current?.contains(next)) return;
+        cancel();
+      }}
+    >
       <label
         className="sr-only"
         htmlFor={inputId}
@@ -78,12 +92,15 @@ export function CreateCollectionInline(props: {
             void submit();
           }
         }}
-        onBlur={() => cancel()}
       />
       <Button
         type="button"
         size="sm"
         disabled={isLoading || value.trim().length === 0}
+        onMouseDown={(e) => {
+          // Zapobiega blur na Input przed click (który wcześniej anulował wpis).
+          e.preventDefault();
+        }}
         onClick={() => void submit()}
       >
         Dodaj

@@ -9,6 +9,7 @@ import type { Database } from '@/db/database.types.ts';
 
 const supabaseUrl = import.meta.env.SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.SUPABASE_KEY;
+const supabaseServiceRoleKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export type SupabaseClient = BaseSupabaseClient<Database>;
 
@@ -61,6 +62,15 @@ export function createSupabaseClient(options?: {
       headers: authorization ? { Authorization: authorization } : {},
     },
   });
+}
+
+/**
+ * Admin client (service role) – omija RLS.
+ * Używaj TYLKO po stronie serwera i tylko po manualnej weryfikacji właściciela rekordu.
+ */
+export function createSupabaseAdminClient(): SupabaseClient | null {
+  if (!supabaseServiceRoleKey) return null;
+  return createClient<Database>(supabaseUrl, supabaseServiceRoleKey);
 }
 
 // Default client (anon / without user auth). Prefer request-scoped client via middleware for RLS.
