@@ -40,7 +40,7 @@ function getDefaultMockFlag(): boolean {
 
 async function fetchJson<T>(args: {
   url: string;
-  method?: 'GET' | 'POST';
+  method?: 'GET' | 'POST' | 'PATCH';
   body?: unknown;
   accessToken?: string;
 }): Promise<T> {
@@ -226,6 +226,30 @@ export function createDashboardService(opts?: DashboardServiceOptions) {
         accessToken,
       });
       return json;
+    },
+
+    async setFlashcardFavorite(args: {
+      flashcardId: string;
+      isFavorite: boolean;
+    }): Promise<void> {
+      if (!args.flashcardId) throw new Error('Brak flashcardId.');
+
+      if (mock) {
+        await sleep(250);
+        // Dashboard pokazuje tylko ulubione, więc "odpięcie" usuwa z listy mocków.
+        if (!args.isFavorite) {
+          const idx = mockFavorites.findIndex((f) => f.id === args.flashcardId);
+          if (idx !== -1) mockFavorites.splice(idx, 1);
+        }
+        return;
+      }
+
+      await fetchJson({
+        url: `${baseUrl}/api/v1/flashcards/${encodeURIComponent(args.flashcardId)}`,
+        method: 'PATCH',
+        body: { is_favorite: args.isFavorite },
+        accessToken,
+      });
     },
 
     HttpError,

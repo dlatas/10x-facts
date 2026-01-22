@@ -8,6 +8,7 @@ export interface DashboardDataState {
   favorites: FavoriteFlashcardDto[];
   isLoading: boolean;
   isCreatingCollection: boolean;
+  isUpdatingFavorite: boolean;
   error: string | null;
 }
 
@@ -30,6 +31,7 @@ export function useDashboardData(args?: {
     favorites: [],
     isLoading: true,
     isCreatingCollection: false,
+    isUpdatingFavorite: false,
     error: null,
   });
 
@@ -102,6 +104,50 @@ export function useDashboardData(args?: {
     [refreshCollections, service]
   );
 
+  const setFavorite = React.useCallback(
+    async (flashcardId: string, isFavorite: boolean) => {
+      if (!flashcardId) return;
+
+      const previous = state.favorites;
+      // Dashboard pokazuje tylko ulubione, więc odpięcie usuwa z listy.
+      const next = isFavorite
+        ? previous
+        : previous.filter((f) => f.id !== flashcardId);
+
+      setState((s) => ({
+        ...s,
+        favorites: next,
+        isUpdatingFavorite: true,
+        error: null,
+      }));
+
+      try {
+        await service.setFlashcardFavorite({ flashcardId, isFavorite });
+      } catch (e) {
+        const err = e as unknown;
+        if (err && typeof err === 'object' && 'status' in err) {
+          const status = (err as { status?: number }).status;
+          if (status === 401) {
+            redirectToLogin();
+            return;
+          }
+        }
+        // rollback
+        setState((s) => ({
+          ...s,
+          favorites: previous,
+          error:
+            err instanceof Error
+              ? err.message
+              : 'Nie udało się zaktualizować ulubionych.',
+        }));
+      } finally {
+        setState((s) => ({ ...s, isUpdatingFavorite: false }));
+      }
+    },
+    [service, state.favorites]
+  );
+
   React.useEffect(() => {
     void refreshAll();
   }, [refreshAll]);
@@ -112,5 +158,6 @@ export function useDashboardData(args?: {
     refreshCollections,
     refreshFavorites,
     createCollection,
+    setFavorite,
   };
 }

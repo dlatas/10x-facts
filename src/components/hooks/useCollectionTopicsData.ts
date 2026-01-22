@@ -52,7 +52,9 @@ function redirectToLogin(): void {
 
 function redirectToCollections(reason?: string): void {
   if (typeof window === 'undefined') return;
-  const url = reason ? `/collections?reason=${encodeURIComponent(reason)}` : '/collections';
+  const url = reason
+    ? `/collections?reason=${encodeURIComponent(reason)}`
+    : '/collections';
   window.location.assign(url);
 }
 
@@ -61,7 +63,11 @@ function readUrlState(): { q: string; collectionName: string | null } {
   const url = new URL(window.location.href);
   const q = url.searchParams.get('q') ?? '';
   const collectionName = url.searchParams.get('collectionName');
-  return { q, collectionName: collectionName && collectionName.trim() ? collectionName : null };
+  return {
+    q,
+    collectionName:
+      collectionName && collectionName.trim() ? collectionName : null,
+  };
 }
 
 function writeQueryToUrl(q: string): void {
@@ -69,7 +75,11 @@ function writeQueryToUrl(q: string): void {
   const url = new URL(window.location.href);
   if (q && q.trim()) url.searchParams.set('q', q);
   else url.searchParams.delete('q');
-  window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+  window.history.replaceState(
+    {},
+    '',
+    `${url.pathname}${url.search}${url.hash}`
+  );
 }
 
 export function useCollectionTopicsData(args: {
@@ -173,7 +183,9 @@ export function useCollectionTopicsData(args: {
       }
       setStatus('error');
       setErrorMessage(
-        err instanceof Error ? err.message : 'Nie udało się załadować listy tematów.'
+        err instanceof Error
+          ? err.message
+          : 'Nie udało się załadować listy tematów.'
       );
     }
   }, [args.collectionId, committedQuery, limit, service]);
@@ -216,7 +228,9 @@ export function useCollectionTopicsData(args: {
           setCreateError(err.message || 'Nie udało się utworzyć tematu.');
           return null;
         }
-        setCreateError(err instanceof Error ? err.message : 'Nie udało się utworzyć tematu.');
+        setCreateError(
+          err instanceof Error ? err.message : 'Nie udało się utworzyć tematu.'
+        );
         return null;
       } finally {
         setIsCreating(false);
@@ -308,4 +322,3 @@ export function useCollectionTopicsData(args: {
     refreshTopics,
   };
 }
-

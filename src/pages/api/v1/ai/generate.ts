@@ -6,6 +6,7 @@ import {
   generateProposalViaOpenRouter,
   getIsRandomTopic,
   insertAiGenerationEvent,
+  pickRandomTopicDomain,
 } from '@/lib/services/ai-generation.service';
 import type { AiGenerateResponseDto } from '@/types';
 import { json, jsonError, readJsonBody, requireUserId } from '@/lib/http/api';
@@ -47,6 +48,27 @@ export async function POST(context: APIContext): Promise<Response> {
   if (!topic) return jsonError(404, 'Nie znaleziono tematu.');
 
   const isRandom = getIsRandomTopic(topic);
+  const randomDomain = isRandom ? pickRandomTopicDomain() : null;
+
+  // 3b) Anti-repeat: fetch last auto-generated fronts for this topic
+  const { data: recentAuto, error: recentAutoError } = await supabase
+    .from('flashcards')
+    .select('front')
+    .eq('user_id', userId)
+    .eq('topic_id', topic_id)
+    .eq('source', 'auto_generated')
+    .order('created_at', { ascending: false })
+    .limit(8);
+
+  // Best-effort: ignore errors (never block generation on metrics/aux fetch)
+  const avoidFronts =
+    recentAutoError || !Array.isArray(recentAuto)
+      ? []
+      : recentAuto
+          .map((r) => (r as { front?: unknown }).front)
+          .filter(
+            (v): v is string => typeof v === 'string' && v.trim().length > 0
+          );
 
   // 4) Daily limit (counts events accepted/rejected/skipped)
   const dailyLimitRaw = import.meta.env.AI_DAILY_EVENT_LIMIT;
@@ -75,19 +97,50 @@ export async function POST(context: APIContext): Promise<Response> {
   const model = import.meta.env.OPENROUTER_MODEL ?? 'openai/gpt-4o-mini';
 
   try {
-    const proposal = await generateProposalViaOpenRouter({
+    // Best-effort retries to avoid repeating the same "front" for a topic.
+    let proposal = await generateProposalViaOpenRouter({
       apiKey,
       model,
-      topic: { name: topic.name, description: topic.description },
+      topic: isRandom
+        ? { name: randomDomain?.title ?? 'Temat Losowy', description: randomDomain?.description ?? '' }
+        : { name: topic.name, description: topic.description },
+      avoidFronts,
     });
+    if (avoidFronts.includes(proposal.front)) {
+      proposal = await generateProposalViaOpenRouter({
+        apiKey,
+        model,
+        topic: isRandom
+          ? { name: randomDomain?.title ?? 'Temat Losowy', description: randomDomain?.description ?? '' }
+          : { name: topic.name, description: topic.description },
+        avoidFronts,
+      });
+    }
+    if (avoidFronts.includes(proposal.front)) {
+      proposal = await generateProposalViaOpenRouter({
+        apiKey,
+        model,
+        topic: isRandom
+          ? { name: randomDomain?.title ?? 'Temat Losowy', description: randomDomain?.description ?? '' }
+          : { name: topic.name, description: topic.description },
+        avoidFronts,
+      });
+    }
 
     const response: AiGenerateResponseDto = {
       proposal: { front: proposal.front, back: proposal.back },
       limit: { remaining: limit.remaining, reset_at_utc: limit.resetAtUtc },
       is_random: isRandom,
+      random_domain_label: isRandom ? (randomDomain?.label ?? null) : null,
     };
 
-    return json(response, { status: 200 });
+    return json(response, {
+      status: 200,
+      headers: {
+        // Prevent caching of AI proposals (should be fresh each call).
+        'Cache-Control': 'no-store',
+      },
+    });
   } catch {
     // Best-effort: track failed generation without consuming the daily "decision" limit.
     try {
@@ -97,7 +150,7 @@ export async function POST(context: APIContext): Promise<Response> {
         topicId: topic_id,
         status: 'failed',
         isRandom,
-        randomDomainLabel: null,
+        randomDomainLabel: isRandom ? (randomDomain?.label ?? null) : null,
         model,
       });
     } catch {

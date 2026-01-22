@@ -13,9 +13,11 @@ export function DashboardClient() {
     favorites,
     isLoading,
     isCreatingCollection,
+    isUpdatingFavorite,
     error,
     refreshAll,
     createCollection,
+    setFavorite,
   } = useDashboardData();
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -31,6 +33,17 @@ export function DashboardClient() {
     setIsModalOpen(false);
     setSelectedFlashcard(null);
   }, []);
+
+  const unfavorite = React.useCallback(
+    async (flashcard: FavoriteFlashcardDto) => {
+      // Dashboard pokazuje tylko ulubione; odpięcie usuwa z sekcji.
+      await setFavorite(flashcard.id, false);
+      if (selectedFlashcard?.id === flashcard.id) {
+        closeFlashcard();
+      }
+    },
+    [closeFlashcard, selectedFlashcard?.id, setFavorite]
+  );
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col md:flex-row">
@@ -48,14 +61,14 @@ export function DashboardClient() {
               Dashboard
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Błysnąć ciekawostką: 6 losowych ulubionych fiszek.
+              Błyśnij ciekawostką: 6 losowych ulubionych fiszek.
             </p>
           </div>
 
           <Button
             variant="outline"
             onClick={() => void refreshAll()}
-            disabled={isLoading}
+            disabled={isLoading || isUpdatingFavorite}
           >
             Odśwież
           </Button>
@@ -83,6 +96,8 @@ export function DashboardClient() {
             flashcards={favorites}
             loading={isLoading}
             onCardClick={openFlashcard}
+            onToggleFavorite={unfavorite}
+            isTogglingFavorite={isUpdatingFavorite}
             onRetry={() => void refreshAll()}
           />
         </section>
@@ -91,6 +106,8 @@ export function DashboardClient() {
           isOpen={isModalOpen}
           onClose={closeFlashcard}
           flashcard={selectedFlashcard}
+          onToggleFavorite={selectedFlashcard ? () => void unfavorite(selectedFlashcard) : undefined}
+          isTogglingFavorite={isUpdatingFavorite}
         />
       </main>
     </div>

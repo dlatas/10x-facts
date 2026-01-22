@@ -9,6 +9,14 @@ export interface AiGenerateCommand {
   topic_id: Topic['id'];
 }
 
+export interface AiGenerateTopicDescriptionCommand {
+  topic_id: Topic['id'];
+}
+
+export interface AiGenerateTopicDescriptionResponseDto {
+  description: Topic['description'];
+}
+
 export type AiGenerationProposalDto = Pick<Flashcard, 'front' | 'back'>;
 
 export interface AiGenerationLimitDto {
@@ -20,6 +28,11 @@ export interface AiGenerateResponseDto {
   proposal: AiGenerationProposalDto;
   limit: AiGenerationLimitDto;
   is_random: AiGenerationEvent['is_random'];
+  /**
+   * Tylko dla tematu losowego: identyfikator wylosowanej domeny/tematu (telemetria).
+   * Dla normalnych tematów: null.
+   */
+  random_domain_label?: AiGenerationEvent['random_domain_label'];
 }
 
 export interface AiAcceptCommand {

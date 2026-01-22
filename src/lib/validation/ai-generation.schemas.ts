@@ -10,6 +10,10 @@ export const aiGenerateCommandSchema = z.object({
   topic_id: uuidSchema,
 });
 
+export const aiGenerateTopicDescriptionCommandSchema = z.object({
+  topic_id: uuidSchema,
+});
+
 export const aiAcceptCommandSchema = z.object({
   topic_id: uuidSchema,
   front: trimmedStringSchema(200),

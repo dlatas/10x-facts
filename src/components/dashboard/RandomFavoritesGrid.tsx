@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 export function RandomFavoritesGrid(props: {
   flashcards: FavoriteFlashcardDto[];
   onCardClick: (flashcard: FavoriteFlashcardDto) => void;
+  onToggleFavorite?: (flashcard: FavoriteFlashcardDto) => void;
+  isTogglingFavorite?: boolean;
   loading: boolean;
   onRetry?: () => void;
 }) {
@@ -49,6 +51,8 @@ export function RandomFavoritesGrid(props: {
           key={f.id}
           flashcard={f}
           onClick={props.onCardClick}
+          onToggleFavorite={props.onToggleFavorite}
+          isTogglingFavorite={props.isTogglingFavorite}
         />
       ))}
     </div>

@@ -1,12 +1,16 @@
 import * as React from "react";
+import { Heart } from "lucide-react";
 
 import type { FavoriteFlashcardDto } from "@/types";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export const FlashcardPreviewCard = React.memo(function FlashcardPreviewCard(props: {
   flashcard: FavoriteFlashcardDto;
   onClick?: (flashcard: FavoriteFlashcardDto) => void;
+  onToggleFavorite?: (flashcard: FavoriteFlashcardDto) => void;
+  isTogglingFavorite?: boolean;
   className?: string;
 }) {
   const { flashcard, onClick } = props;
@@ -14,6 +18,15 @@ export const FlashcardPreviewCard = React.memo(function FlashcardPreviewCard(pro
   const handleClick = React.useCallback(() => {
     onClick?.(flashcard);
   }, [flashcard, onClick]);
+
+  const backPreview = React.useMemo(() => {
+    const words = (flashcard.back ?? "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    if (words.length <= 10) return words.join(" ");
+    return `${words.slice(0, 10).join(" ")}…`;
+  }, [flashcard.back]);
 
   return (
     <Card
@@ -32,9 +45,31 @@ export const FlashcardPreviewCard = React.memo(function FlashcardPreviewCard(pro
       )}
       aria-label={`Otwórz fiszkę: ${props.flashcard.front}`}
     >
-      <CardHeader className="pb-4">
-        <CardTitle className="line-clamp-2">{props.flashcard.front}</CardTitle>
+      <CardHeader className="p-4 pb-2">
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="line-clamp-2">{props.flashcard.front}</CardTitle>
+          {props.onToggleFavorite ? (
+            <Button
+              variant="outline"
+              size="icon"
+              disabled={props.isTogglingFavorite}
+              aria-label="Usuń z ulubionych"
+              aria-pressed={true}
+              title="Usuń z ulubionych"
+              onClick={(e) => {
+                e.stopPropagation();
+                props.onToggleFavorite?.(flashcard);
+              }}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <Heart className="fill-red-500 text-red-500" />
+            </Button>
+          ) : null}
+        </div>
       </CardHeader>
+      <CardContent className="p-4 pt-0">
+        <p className="text-sm text-muted-foreground">{backPreview}</p>
+      </CardContent>
     </Card>
   );
 });
