@@ -12,6 +12,7 @@ export const TopicsList = React.memo(function TopicsList(props: TopicsListProps)
           item={item}
           onDeleteRequest={props.onDeleteRequest}
           collectionNameForContext={props.collectionNameForContext}
+          collectionIdForContext={props.collectionIdForContext}
         />
       ))}
     </div>

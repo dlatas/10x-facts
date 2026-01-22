@@ -1,0 +1,20 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { TopicClient } from '@/components/topic/TopicClient';
+
+if (!Astro.locals.auth?.isAuthenticated) {
+  return Astro.redirect('/login');
+}
+
+const topicId = Astro.params.topicId;
+if (!topicId) {
+  return Astro.redirect('/collections');
+}
+---
+
+<AppLayout title="Temat — 10x Facts">
+  <TopicClient
+    client:load
+    topicId={topicId}
+  />
+</AppLayout>

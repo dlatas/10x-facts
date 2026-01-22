@@ -8,15 +8,18 @@ import { Card, CardContent } from '@/components/ui/card';
 export const TopicRow = React.memo(function TopicRow(props: TopicRowProps) {
   const canDelete = !props.item.isSystem;
 
-  const descriptionHrefBase = `/topics/${encodeURIComponent(props.item.id)}`;
-  const descriptionHref = props.collectionNameForContext
-    ? `${descriptionHrefBase}?fromCollectionName=${encodeURIComponent(props.collectionNameForContext)}`
-    : descriptionHrefBase;
-
-  const flashcardsHrefBase = `/topics/${encodeURIComponent(props.item.id)}/flashcards`;
-  const flashcardsHref = props.collectionNameForContext
-    ? `${flashcardsHrefBase}?fromCollectionName=${encodeURIComponent(props.collectionNameForContext)}`
-    : flashcardsHrefBase;
+  const detailsUrl = React.useMemo(() => {
+    const url = new URL(`/topics/${encodeURIComponent(props.item.id)}`, 'http://local');
+    if (props.collectionIdForContext) {
+      url.searchParams.set('fromCollectionId', props.collectionIdForContext);
+    }
+    if (props.collectionNameForContext) {
+      url.searchParams.set('fromCollectionName', props.collectionNameForContext);
+    }
+    // Szybki fallback na nazwę w nagłówku, zanim dojdą dane z API.
+    url.searchParams.set('topicName', props.item.name);
+    return `${url.pathname}${url.search}`;
+  }, [props.collectionIdForContext, props.collectionNameForContext, props.item.id, props.item.name]);
 
   return (
     <Card>
@@ -30,10 +33,7 @@ export const TopicRow = React.memo(function TopicRow(props: TopicRowProps) {
 
         <div className="flex flex-wrap items-center gap-2">
           <Button asChild variant="outline">
-            <a href={descriptionHref}>Opis tematu</a>
-          </Button>
-          <Button asChild variant="outline">
-            <a href={flashcardsHref}>Fiszki</a>
+            <a href={detailsUrl}>Szczegóły</a>
           </Button>
 
           {props.onDeleteRequest ? (

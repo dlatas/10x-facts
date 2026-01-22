@@ -174,8 +174,11 @@ export async function POST(context: APIContext): Promise<Response> {
   }
 
   // 3) Ensure collection exists (404 if not)
+  // Dla kolekcji losowej blokujemy tworzenie dodatkowych tematów w UI i w API.
+  // W kolekcji losowej powinien istnieć wyłącznie temat systemowy `random_topic`.
+  let collection: { id: string; system_key: string | null };
   try {
-    await getCollectionOr404({
+    collection = await getCollectionOr404({
       supabase,
       userId: auth.userId,
       collectionId: collectionIdParsed.data,
@@ -198,6 +201,13 @@ export async function POST(context: APIContext): Promise<Response> {
     return jsonError(500, 'Błąd podczas pobierania kolekcji.');
   }
 
+  if (collection.system_key === RANDOM_COLLECTION_SYSTEM_KEY) {
+    return jsonError(
+      403,
+      'Nie można tworzyć tematów w kolekcji losowej. Dostępny jest tylko temat losowy.'
+    );
+  }
+
   // 4) Parse + validate body
   const body = await readJsonBody(context);
   if (!body.ok) return body.response;
@@ -217,7 +227,7 @@ export async function POST(context: APIContext): Promise<Response> {
     const created = await createTopicInCollection({
       supabase,
       userId: auth.userId,
-      collectionId: collectionIdParsed.data,
+      collectionId: collection.id,
       name: parsed.data.name,
       description: parsed.data.description,
     });

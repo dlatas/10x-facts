@@ -18,6 +18,7 @@ export interface CollectionTopicsToolbarProps {
   onQueryChange: (q: string) => void;
   onQueryCommitNow?: () => void;
   onCreateClick: () => void;
+  canCreate?: boolean;
   isBusy?: boolean;
 }
 
@@ -49,12 +50,14 @@ export interface TopicsListProps {
   items: TopicsListItemVm[];
   onDeleteRequest?: (item: TopicsListItemVm) => void;
   collectionNameForContext?: string | null;
+  collectionIdForContext?: string;
 }
 
 export interface TopicRowProps {
   item: TopicsListItemVm;
   onDeleteRequest?: (item: TopicsListItemVm) => void;
   collectionNameForContext?: string | null;
+  collectionIdForContext?: string;
 }
 
 export interface DeleteTopicConfirmDialogProps {
@@ -64,4 +67,3 @@ export interface DeleteTopicConfirmDialogProps {
   onOpenChange: (open: boolean) => void;
   isDeleting: boolean;
 }
-

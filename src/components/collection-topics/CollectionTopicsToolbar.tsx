@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 export const CollectionTopicsToolbar = React.memo(function CollectionTopicsToolbar(
   props: CollectionTopicsToolbarProps
 ) {
+  const canCreate = props.canCreate ?? true;
+
   return (
     <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <TopicsSearchInput
@@ -17,7 +19,16 @@ export const CollectionTopicsToolbar = React.memo(function CollectionTopicsToolb
         placeholder="Szukaj tematu po nazwie…"
       />
 
-      <Button type="button" onClick={props.onCreateClick} disabled={props.isBusy}>
+      <Button
+        type="button"
+        onClick={props.onCreateClick}
+        disabled={props.isBusy || !canCreate}
+        title={
+          !canCreate
+            ? 'W kolekcji losowej dostępny jest tylko temat losowy.'
+            : undefined
+        }
+      >
         Utwórz temat
       </Button>
     </div>

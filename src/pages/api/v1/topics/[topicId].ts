@@ -59,6 +59,28 @@ export async function PATCH(context: APIContext): Promise<Response> {
     });
   }
 
+  // 3b) Random topic: opis jest niedozwolony (w temacie losowym opis nie istnieje w UX).
+  try {
+    const { data: existing, error: existingError } = await supabase
+      .from('topics')
+      .select('id,system_key')
+      .eq('id', topicIdParsed.data)
+      .eq('user_id', auth.userId)
+      .maybeSingle();
+    if (existingError) throw existingError;
+    if (!existing) return jsonError(404, 'Nie znaleziono tematu.');
+    if (existing.system_key === 'random_topic') {
+      return jsonError(403, 'Nie można edytować opisu dla tematu losowego.');
+    }
+  } catch (err) {
+    console.error('[PATCH /topics/:topicId] readTopicForRandomGuard', {
+      userId: auth.userId,
+      topicId: topicIdParsed.data,
+      err,
+    });
+    return jsonError(500, 'Błąd podczas weryfikacji tematu.');
+  }
+
   // 4) Update
   try {
     const updated = await updateTopicDescription({

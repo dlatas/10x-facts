@@ -28,7 +28,7 @@ export function CollectionTopicsClient(props: { collectionId: string }) {
       const systemKey = dto.system_key;
       return {
         id: dto.id,
-        name: dto.name,
+        name: systemKey === 'random_topic' ? 'Temat Losowy' : dto.name,
         description: dto.description ?? null,
         systemKey,
         isSystem: systemKey != null,
@@ -37,6 +37,25 @@ export function CollectionTopicsClient(props: { collectionId: string }) {
       };
     });
   }, [view.items]);
+
+  const isRandomCollection = React.useMemo(() => {
+    // Prefer pewny sygnał: obecność tematu systemowego random_topic w tej kolekcji.
+    if (itemsVm.some((t) => t.systemKey === 'random_topic')) return true;
+
+    // Fallback: heurystyka po nazwie przekazanej w nawigacji.
+    const n = (view.collectionName ?? '').trim().toLowerCase();
+    return n === 'random' || n === 'kolekcja losowa';
+  }, [itemsVm, view.collectionName]);
+
+  const visibleItems = React.useMemo(() => {
+    if (!isRandomCollection) return itemsVm;
+    return itemsVm.filter((t) => t.systemKey === 'random_topic');
+  }, [isRandomCollection, itemsVm]);
+
+  React.useEffect(() => {
+    if (!isRandomCollection) return;
+    if (createDialogOpen) setCreateDialogOpen(false);
+  }, [createDialogOpen, isRandomCollection]);
 
   const requestDelete = React.useCallback((item: TopicsListItemVm) => {
     if (item.isSystem) return;
@@ -80,7 +99,11 @@ export function CollectionTopicsClient(props: { collectionId: string }) {
         query={view.queryDraft}
         onQueryChange={view.setQueryDraft}
         onQueryCommitNow={view.commitQueryNow}
-        onCreateClick={() => setCreateDialogOpen(true)}
+        onCreateClick={() => {
+          if (isRandomCollection) return;
+          setCreateDialogOpen(true);
+        }}
+        canCreate={!isRandomCollection}
         isBusy={isBusy}
       />
 
@@ -94,19 +117,22 @@ export function CollectionTopicsClient(props: { collectionId: string }) {
 
       {view.status === 'ready' && !isEmpty ? (
         <TopicsList
-          items={itemsVm}
+          items={visibleItems}
           onDeleteRequest={requestDelete}
           collectionNameForContext={view.collectionName}
+          collectionIdForContext={collectionId}
         />
       ) : null}
 
-      <CreateTopicDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onSubmit={submitCreate}
-        isSubmitting={view.isCreating}
-        errorMessage={view.createError}
-      />
+      {!isRandomCollection ? (
+        <CreateTopicDialog
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+          onSubmit={submitCreate}
+          isSubmitting={view.isCreating}
+          errorMessage={view.createError}
+        />
+      ) : null}
 
       <DeleteTopicConfirmDialog
         open={deleteDialogOpen}
