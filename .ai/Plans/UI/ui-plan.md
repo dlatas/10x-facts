@@ -5,6 +5,7 @@
 10xFacts to aplikacja webowa do kolekcjonowania i odkrywania ciekawostek w formie fiszek, z organizacją danych w strukturze **Kolekcja → Temat → Fiszki**, oraz z generowaniem pojedynczej propozycji fiszki przez AI, jak również z możliwością manualnego dodania fiszki.
 
 Architektura UI MVP opiera się o:
+
 - **Routing (osobne trasy)** dla kluczowych widoków: Dashboard, Kolekcje, Tematy, Fiszki, Ulubione, Profil użytkownika.
 - **App Shell** w dwóch wariantach:
   - **DashboardLayout**: stały navbar + dashboardowy sidebar + treść (grid).
@@ -143,49 +144,40 @@ Architektura UI MVP opiera się o:
 
 - **Tematy w kolekcji (lista)**
   - **Ścieżka**: `/collections/:collectionId/topics`
-  - **Główny cel**: lista tematów w wybranej kolekcji + tworzenie tematu + wejście do widoków tematu/fiszek.
+  - **Główny cel**: lista tematów w wybranej kolekcji + tworzenie tematu + wejście do widoku tematu (opis + fiszki).
   - **Kluczowe informacje**:
     - nazwa kolekcji (z kontekstu nawigacyjnego),
     - lista tematów, wyszukiwarka `q` (strict),
     - oznaczenie tematu systemowego (w kolekcji systemowej).
   - **Kluczowe komponenty**:
     - lista tematów, CTA „Utwórz temat”,
-    - akcje: „Opis tematu” (`/topics/:topicId`), „Fiszki” (`/topics/:topicId/flashcards`),
+    - akcja: przejście do widoku tematu (`/topics/:topicId`) — opis jest edytowany w modalu, a fiszki są wyświetlane pod spodem na tej samej stronie,
     - opcjonalnie: usuwanie tematu (z wyjątkiem systemowego).
   - **UX/A11y/Bezpieczeństwo**:
     - `404` (kolekcja nie istnieje / nie należy do usera) → redirect do `/collections` + toast,
     - blokada usuwania tematu systemowego (API `403`).
 
-- **Temat (edycja opisu)**
+- **Temat (opis + fiszki)**
   - **Ścieżka**: `/topics/:topicId`
-  - **Główny cel**: edycja opisu tematu (lista zagadnień), który wpływa na generacje AI.
+  - **Główny cel**: przeglądanie, wyszukiwanie i filtrowanie fiszek w temacie; tworzenie manualne; edycja/usuwanie; generowanie AI z podglądem w modalu; oraz edycja opisu tematu w modalu.
   - **Kluczowe informacje**:
     - nazwa tematu (read-only),
-    - pole opisu (może być puste) + wskazówka wpływu na jakość AI,
-    - stany: saving/saved/error.
-  - **Kluczowe komponenty**:
-    - edytor opisu + przycisk „Zapisz”,
-    - banner/inline hint o wpływie pustego opisu.
-  - **UX/A11y/Bezpieczeństwo**:
-    - zapis manualny (bez autosave), czytelna informacja o statusie,
-    - `404` → redirect do `/collections` + toast.
-
-- **Fiszki w temacie (lista + akcje)**
-  - **Ścieżka**: `/topics/:topicId/flashcards`
-  - **Główny cel**: przeglądanie, wyszukiwanie i filtrowanie fiszek; tworzenie manualne; edycja/usuwanie; generowanie AI z podglądem w modalu.
-  - **Kluczowe informacje**:
+    - opis tematu (może być pusty) + wskazówka wpływu na jakość AI (edytowany w modalu),
     - lista fiszek (front + skrót back),
     - wyszukiwarka `q` (front/back, strict),
-    - filtry: `is_favorite`, `source`,
-    - oznaczenie: źródło (manual/AI), `edited_by_user`.
+    - filtry: `is_favorite`, `source` (w URL),
+    - oznaczenie: źródło (manual/AI), `edited_by_user`,
+    - stany: saving/saved/error (dla opisu), loading/empty/error (dla listy fiszek).
   - **Kluczowe komponenty**:
-    - toolbar: search + filtry (w URL),
+    - przycisk/akcja „Edytuj opis” → modal z edytorem opisu + przycisk „Zapisz” (manualny zapis, bez autosave),
+    - toolbar fiszek: search + filtry (w URL),
     - formularz „Dodaj fiszkę” (manual),
     - karta fiszki z akcjami: favorite toggle, edit, delete,
     - modal/drawer edycji fiszki (walidacja 200/600, source read-only),
     - **AI Generate**: przycisk „Generuj AI” → modal podglądu propozycji,
     - modal AI: front/back, akcje Zapisz/Odrzuć, ewentualnie „Zamknij” (skip).
   - **UX/A11y/Bezpieczeństwo**:
+    - opis: zapis manualny (bez autosave), czytelna informacja o statusie,
     - blokada przycisku generowania podczas requestu (redukcja podwójnych kliknięć),
     - błędy AI:
       - `429`: komunikat o limicie + informacja o resecie 00:00 UTC,
@@ -234,22 +226,21 @@ Architektura UI MVP opiera się o:
    - wejście do tematów: `/collections/:collectionId/topics`
 4. **Tematy w kolekcji** (`/collections/:collectionId/topics`)
    - utworzenie tematu (opcjonalnie)
-   - wejście do opisu tematu: `/topics/:topicId`
-5. **Temat (opis)** (`/topics/:topicId`)
-   - uzupełnienie opisu (manualny zapis)
-   - przejście do fiszek: `/topics/:topicId/flashcards`
-6. **Fiszki w temacie** (`/topics/:topicId/flashcards`)
+   - wejście do tematu: `/topics/:topicId`
+5. **Temat (opis + fiszki)** (`/topics/:topicId`)
+   - edycja opisu w modalu (manualny zapis)
+   - przegląd fiszek pod spodem (domyślnie na tej samej stronie)
    - klik „Generuj AI” → modal propozycji (blokada akcji w trakcie requestu)
-7. **Modal AI (podgląd)**:
+6. **Modal AI (podgląd)**:
    - **Zapisz** → `POST /api/v1/ai/accept` → powrót do listy (invalidate fiszek) + toast
    - **Odrzuć** → `POST /api/v1/ai/reject` → powrót do listy + toast
    - **Zamknij bez akcji** → opcjonalnie `POST /api/v1/ai/skip` → powrót do listy
-8. **Oznacz jako ulubione** (toggle na karcie fiszki) → `PATCH /api/v1/flashcards/{id}`
-9. **Powrót na Dashboard** → losowe ulubione mogą zawierać nową fiszkę
+7. **Oznacz jako ulubione** (toggle na karcie fiszki) → `PATCH /api/v1/flashcards/{id}`
+8. **Powrót na Dashboard** → losowe ulubione mogą zawierać nową fiszkę
 
 ### 5.2 Manualne dodawanie fiszki
 
-1. `/topics/:topicId/flashcards` → „Dodaj fiszkę” → `POST /api/v1/topics/{topicId}/flashcards`
+1. `/topics/:topicId` (sekcja fiszek) → „Dodaj fiszkę” → `POST /api/v1/topics/{topicId}/flashcards`
 2. Walidacja 200/600; błędy `400` inline; po sukcesie odświeżenie listy.
 
 ### 5.3 Przypadek admina (metryki)
@@ -267,7 +258,7 @@ Architektura UI MVP opiera się o:
 - **Dashboard** ma dodatkowy **sidebar** (lokalna nawigacja mini-listą kolekcji) oraz CTA „Wszystkie kolekcje”.
 - **Nawigacja hierarchiczna**:
   - z `/collections` → `/collections/:collectionId/topics`
-  - z listy tematów → `/topics/:topicId` (opis) oraz `/topics/:topicId/flashcards` (fiszki)
+  - z listy tematów → `/topics/:topicId` (jedna strona: opis w modalu + fiszki pod spodem)
 - **Zachowanie na błędach zasobów**:
   - `404` w widokach zasobów → redirect do `/collections` + toast/komunikat (zgodnie z notatkami).
 
@@ -327,15 +318,15 @@ Architektura UI MVP opiera się o:
 - **US-011 Brak zmiany nazwy tematu/kolekcji** → brak UI do rename; nazwy read-only we wszystkich widokach
 - **US-012 Przeglądanie listy tematów** → `/collections/:collectionId/topics`
 - **US-013 Wyszukiwanie tematów** → `/collections/:collectionId/topics` (search `q`)
-- **US-014 Manualne dodanie fiszki** → `/topics/:topicId/flashcards` (create manual)
+- **US-014 Manualne dodanie fiszki** → `/topics/:topicId` (sekcja fiszek; create manual)
 - **US-015 Walidacja długości 200/600** → create/edit fiszki (inline validation + blokada zapisu)
-- **US-016 Przeglądanie listy fiszek** → `/topics/:topicId/flashcards`
-- **US-017 Wyszukiwanie fiszek** → `/topics/:topicId/flashcards` (search `q`)
-- **US-018 Filtrowanie ulubionych w temacie** → `/topics/:topicId/flashcards?is_favorite=true` + `/favorites` (w kontekście tematu)
-- **US-019 Filtrowanie po źródle** → `/topics/:topicId/flashcards?source=...`
+- **US-016 Przeglądanie listy fiszek** → `/topics/:topicId` (sekcja fiszek)
+- **US-017 Wyszukiwanie fiszek** → `/topics/:topicId?q=...` (search `q`)
+- **US-018 Filtrowanie ulubionych w temacie** → `/topics/:topicId?is_favorite=true` + `/favorites` (w kontekście tematu)
+- **US-019 Filtrowanie po źródle** → `/topics/:topicId?source=...`
 - **US-020 Oznaczenie jako ulubiona** → toggle na karcie fiszki (PATCH)
 - **US-021 Dashboard: losowe ulubione globalnie** → `/dashboard` (grid 6) + modal szczegółów
-- **US-022 Generowanie AI w temacie** → `/topics/:topicId/flashcards` + modal AI (preview)
+- **US-022 Generowanie AI w temacie** → `/topics/:topicId` (sekcja fiszek) + modal AI (preview)
 - **US-023 Zapisz wygenerowaną fiszkę** → modal AI: „Zapisz” + odświeżenie listy
 - **US-024 Odrzuć wygenerowaną fiszkę** → modal AI: „Odrzuć”
 - **US-025 Pominięcie propozycji** → zamknięcie modalu (opcjonalnie `POST /ai/skip`)
@@ -360,4 +351,3 @@ Architektura UI MVP opiera się o:
 - **Hard delete + kaskada** → ConfirmDialog z ostrzeżeniami + redirect po `404` lub po usunięciu.
 - **AI preview i decyzje** → AIGenerateModal z akcjami Zapisz/Odrzuć/Zamknij + jasne stany `429/502`.
 - **Metryki admina** → sekcja na `/user` widoczna tylko dla `is_admin`.
-

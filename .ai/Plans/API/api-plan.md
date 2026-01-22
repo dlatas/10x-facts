@@ -1,6 +1,7 @@
 # REST API Plan
 
 ## 1. Resources
+
 - `profiles` → `public.profiles` (read-only for users; admin flag)
 - `collections` → `public.collections`
 - `topics` → `public.topics`
@@ -11,6 +12,7 @@
 ## 2. Endpoints
 
 ### Conventions (all list endpoints)
+
 - Pagination: `limit` (default 20, max 100), `offset` (default 0)
 - Sorting: `sort` (e.g., `created_at`), `order` (`asc|desc`, default `desc`)
 - Search: strict substring match (`q`), case-insensitive `ILIKE`, no diacritics normalization
@@ -25,6 +27,7 @@
 ---
 
 ### Auth (Supabase Auth)
+
 These are handled by Supabase Auth (GoTrue). The app uses Supabase SDK; endpoints are listed for completeness.
 
 - **POST** `/auth/signup`
@@ -35,7 +38,10 @@ These are handled by Supabase Auth (GoTrue). The app uses Supabase SDK; endpoint
     ```
   - Response JSON:
     ```json
-    { "user": { "id": "uuid", "email": "..." }, "session": { "access_token": "...", "refresh_token": "..." } }
+    {
+      "user": { "id": "uuid", "email": "..." },
+      "session": { "access_token": "...", "refresh_token": "..." }
+    }
     ```
   - Success: `201`
   - Errors: `400`, `409`
@@ -70,7 +76,12 @@ These are handled by Supabase Auth (GoTrue). The app uses Supabase SDK; endpoint
   - Description: Get current user profile (admin flag).
   - Response JSON:
     ```json
-    { "id": "uuid", "is_admin": false, "created_at": "...", "updated_at": "..." }
+    {
+      "id": "uuid",
+      "is_admin": false,
+      "created_at": "...",
+      "updated_at": "..."
+    }
     ```
   - Success: `200`
   - Errors: `401`
@@ -86,7 +97,13 @@ These are handled by Supabase Auth (GoTrue). The app uses Supabase SDK; endpoint
     ```json
     {
       "items": [
-        { "id": "uuid", "name": "History", "system_key": null, "created_at": "...", "updated_at": "..." }
+        {
+          "id": "uuid",
+          "name": "History",
+          "system_key": null,
+          "created_at": "...",
+          "updated_at": "..."
+        }
       ],
       "total": 1
     }
@@ -102,7 +119,13 @@ These are handled by Supabase Auth (GoTrue). The app uses Supabase SDK; endpoint
     ```
   - Response JSON:
     ```json
-    { "id": "uuid", "name": "History", "system_key": null, "created_at": "...", "updated_at": "..." }
+    {
+      "id": "uuid",
+      "name": "History",
+      "system_key": null,
+      "created_at": "...",
+      "updated_at": "..."
+    }
     ```
   - Success: `201`
   - Errors: `400`, `409`
@@ -127,7 +150,14 @@ These are handled by Supabase Auth (GoTrue). The app uses Supabase SDK; endpoint
     ```json
     {
       "items": [
-        { "id": "uuid", "name": "WW2", "description": "...", "system_key": null, "created_at": "...", "updated_at": "..." }
+        {
+          "id": "uuid",
+          "name": "WW2",
+          "description": "...",
+          "system_key": null,
+          "created_at": "...",
+          "updated_at": "..."
+        }
       ],
       "total": 1
     }
@@ -143,20 +173,35 @@ These are handled by Supabase Auth (GoTrue). The app uses Supabase SDK; endpoint
     ```
   - Response JSON:
     ```json
-    { "id": "uuid", "name": "WW2", "description": "...", "system_key": null, "created_at": "...", "updated_at": "..." }
+    {
+      "id": "uuid",
+      "name": "WW2",
+      "description": "...",
+      "system_key": null,
+      "created_at": "...",
+      "updated_at": "..."
+    }
     ```
   - Success: `201`
   - Errors: `400`, `409`, `404`
 
 - **PATCH** `/api/v1/topics/{topicId}`
   - Description: Update topic description only.
+  - UI routing note: The frontend uses a single topic page `GET /topics/:topicId` where the description is edited in a modal; flashcards are shown below on the same page.
   - Request JSON:
     ```json
     { "description": "New description" }
     ```
   - Response JSON:
     ```json
-    { "id": "uuid", "name": "WW2", "description": "New description", "system_key": null, "created_at": "...", "updated_at": "..." }
+    {
+      "id": "uuid",
+      "name": "WW2",
+      "description": "New description",
+      "system_key": null,
+      "created_at": "...",
+      "updated_at": "..."
+    }
     ```
   - Success: `200`
   - Errors: `400`, `401`, `403` (attempt to change name/system_key), `404`
@@ -176,6 +221,7 @@ These are handled by Supabase Auth (GoTrue). The app uses Supabase SDK; endpoint
 
 - **GET** `/api/v1/topics/{topicId}/flashcards`
   - Description: List flashcards in a topic.
+  - UI routing note: Consumed by the single topic page `GET /topics/:topicId` (flashcards section). There is no separate frontend route `/topics/:topicId/flashcards`.
   - Query params:
     - `q` (search in `front` or `back`)
     - `is_favorite` (`true|false`)
@@ -260,7 +306,11 @@ These are handled by Supabase Auth (GoTrue). The app uses Supabase SDK; endpoint
   - Query params: `limit` (default 5, max 20)
   - Response JSON:
     ```json
-    { "items": [ { "id": "uuid", "front": "...", "back": "...", "topic_id": "uuid" } ] }
+    {
+      "items": [
+        { "id": "uuid", "front": "...", "back": "...", "topic_id": "uuid" }
+      ]
+    }
     ```
   - Success: `200`
   - Errors: `401`
@@ -290,7 +340,13 @@ These are handled by Supabase Auth (GoTrue). The app uses Supabase SDK; endpoint
   - Description: Accept proposal and persist flashcard + event.
   - Request JSON:
     ```json
-    { "topic_id": "uuid", "front": "Generated title", "back": "Generated text", "is_random": false, "random_domain_label": null }
+    {
+      "topic_id": "uuid",
+      "front": "Generated title",
+      "back": "Generated text",
+      "is_random": false,
+      "random_domain_label": null
+    }
     ```
   - Response JSON:
     ```json
@@ -352,7 +408,13 @@ These are handled by Supabase Auth (GoTrue). The app uses Supabase SDK; endpoint
     ```json
     {
       "items": [
-        { "day_utc": "2026-01-15", "accepted": 12, "rejected": 3, "auto_generated": 20, "manually_created": 5 }
+        {
+          "day_utc": "2026-01-15",
+          "accepted": 12,
+          "rejected": 3,
+          "auto_generated": 20,
+          "manually_created": 5
+        }
       ]
     }
     ```
@@ -360,6 +422,7 @@ These are handled by Supabase Auth (GoTrue). The app uses Supabase SDK; endpoint
   - Errors: `401`, `403`, `400`
 
 ## 3. Authentication and Authorization
+
 - Authentication via Supabase Auth (JWT in `Authorization: Bearer <token>`).
 - Row Level Security (RLS) enforces `user_id = auth.uid()` for `collections`, `topics`, `flashcards`, `ai_generation_events`, and `profiles`.
 - Admin endpoints require `profiles.is_admin = true` verified in SQL security-definer functions; direct SELECT to user content is not granted to admin.
@@ -368,6 +431,7 @@ These are handled by Supabase Auth (GoTrue). The app uses Supabase SDK; endpoint
 ## 4. Validation and Business Logic
 
 ### Validation rules (from schema)
+
 - `collections.name` required, trimmed, max 120 chars; unique per user.
 - `topics.name` required, trimmed, max 120 chars; unique per collection per user.
 - `topics.description` max 10,000 chars; editable; can be empty.
@@ -377,6 +441,7 @@ These are handled by Supabase Auth (GoTrue). The app uses Supabase SDK; endpoint
 - `ai_generation_events.status` is enum: `accepted|rejected|skipped|failed`.
 
 ### Business logic
+
 - No renaming collections/topics in MVP: API only exposes description update for topics.
 - Hard deletes for collections/topics/flashcards; cascades handled by FK.
 - Random collection/topic exist per user and cannot be deleted.

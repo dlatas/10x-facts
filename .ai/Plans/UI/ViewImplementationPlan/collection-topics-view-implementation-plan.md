@@ -5,7 +5,7 @@
 Widok **Tematy w kolekcji (lista)** pod ścieżką `/collections/:collectionId/topics` prezentuje **listę tematów** w wybranej kolekcji, umożliwia **wyszukiwanie po nazwie (strict)**, **utworzenie nowego tematu** oraz (opcjonalnie) **usunięcie tematu** z potwierdzeniem i ostrzeżeniem o kaskadowym usunięciu fiszek. Z poziomu listy użytkownik może przejść do:
 
 - edycji opisu tematu: `/topics/:topicId` (opis read-only nazwy + edycja opisu),
-- listy fiszek w temacie: `/topics/:topicId/flashcards`.
+- sekcji fiszek w temacie: `/topics/:topicId` (fiszki są wyświetlane pod spodem na tej samej stronie; opis edytowany w modalu).
 
 Zakres MVP zgodny z PRD:
 
@@ -44,7 +44,7 @@ src/pages/collections/[collectionId]/topics.astro (SSR auth check + wrapper layo
         │   └── TopicRow (item)
         │       ├── SystemBadge (dla system_key != null)
         │       ├── GoToTopicDescriptionLink (→ /topics/:topicId)
-        │       ├── GoToTopicFlashcardsLink (→ /topics/:topicId/flashcards)
+        │       ├── GoToTopicFlashcardsLink (→ /topics/:topicId, sekcja Fiszki)
         │       └── DeleteTopicButton (tylko nie-systemowe; opcjonalnie)
         └── DeleteTopicConfirmDialog (confirm destructive)
 ```
@@ -343,7 +343,7 @@ Dla spójności z `createDashboardService`, zalecane jest utworzenie serwisu:
    - klik „Opis tematu” → przejście na `/topics/:topicId` (opcjonalnie z przekazaniem `collectionName` w URL, np. `?fromCollectionName=...`).
 
 5. **Przejście do fiszek tematu**
-   - klik „Fiszki” → `/topics/:topicId/flashcards`.
+   - klik „Fiszki” → `/topics/:topicId` (sekcja fiszek na stronie tematu).
 
 6. **Usunięcie tematu (opcjonalnie)**
    - klik „Usuń” → confirm dialog z ostrzeżeniem o usunięciu wszystkich fiszek,
@@ -445,5 +445,4 @@ Dla spójności z `createDashboardService`, zalecane jest utworzenie serwisu:
      - create: walidacja + `409` inline,
      - `404` → redirect do `/collections`,
      - blokada delete tematu systemowego (`system_key != null`) i obsługa `403`,
-     - linki do `/topics/:topicId` oraz `/topics/:topicId/flashcards` działają.
-
+     - link do `/topics/:topicId` działa (opis w modalu, fiszki pod spodem).
