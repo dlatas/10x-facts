@@ -152,7 +152,7 @@ create table if not exists public.topics (
   user_id uuid not null,
   collection_id uuid not null,
   name text not null,
-  description text not null default 'example description.',
+  description text not null default '',
   system_key text null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
