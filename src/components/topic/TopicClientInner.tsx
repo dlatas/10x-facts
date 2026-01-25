@@ -2,6 +2,9 @@ import * as React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Heart, Pencil, X } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { z } from 'zod';
 
 import type {
   CreateFlashcardCommand,
@@ -19,6 +22,7 @@ import type { FlashcardItemVm, TopicHeaderVm } from './topic.types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { clampTrimmed } from '@/lib/utils';
+import { createFlashcardCommandSchema } from '@/lib/validation/flashcards.schemas';
 import {
   Dialog,
   DialogContent,
@@ -54,15 +58,17 @@ export function TopicClientInner(props: { topicId: string }) {
   >('idle');
 
   const [createOpen, setCreateOpen] = React.useState(false);
-  const [createFront, setCreateFront] = React.useState('');
-  const [createBack, setCreateBack] = React.useState('');
-  const [createError, setCreateError] = React.useState<string | null>(null);
+  const createForm = useForm<z.infer<typeof createFlashcardCommandSchema>>({
+    resolver: zodResolver(createFlashcardCommandSchema),
+    defaultValues: { front: '', back: '' },
+  });
 
   const [editOpen, setEditOpen] = React.useState(false);
   const [editTarget, setEditTarget] = React.useState<FlashcardItemVm | null>(null);
-  const [editFront, setEditFront] = React.useState('');
-  const [editBack, setEditBack] = React.useState('');
-  const [editError, setEditError] = React.useState<string | null>(null);
+  const editForm = useForm<z.infer<typeof createFlashcardCommandSchema>>({
+    resolver: zodResolver(createFlashcardCommandSchema),
+    defaultValues: { front: '', back: '' },
+  });
 
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [deleteTarget, setDeleteTarget] = React.useState<FlashcardItemVm | null>(null);
@@ -213,9 +219,8 @@ export function TopicClientInner(props: { topicId: string }) {
     },
     onSuccess: async () => {
       setCreateOpen(false);
-      setCreateFront('');
-      setCreateBack('');
-      setCreateError(null);
+      createForm.reset({ front: '', back: '' });
+      createForm.clearErrors();
       toast.success('Dodano fiszkę.');
       await queryClient.invalidateQueries({ queryKey: FLASHCARDS_QUERY_KEY });
       await queryClient.refetchQueries({ queryKey: FLASHCARDS_QUERY_KEY });
@@ -224,10 +229,15 @@ export function TopicClientInner(props: { topicId: string }) {
       if (e instanceof FlashcardsHttpError) {
         if (e.status === 401) return redirectToLogin();
         if (e.status === 404) return redirectToCollections('topic_not_found');
-        setCreateError(e.message || 'Nie udało się dodać fiszki.');
+        createForm.setError('root', {
+          message: e.message || 'Nie udało się dodać fiszki.',
+        });
         return;
       }
-      setCreateError(e instanceof Error ? e.message : 'Nie udało się dodać fiszki.');
+      createForm.setError('root', {
+        message:
+          e instanceof Error ? e.message : 'Nie udało się dodać fiszki.',
+      });
     },
   });
 
@@ -238,19 +248,23 @@ export function TopicClientInner(props: { topicId: string }) {
     onSuccess: async () => {
       setEditOpen(false);
       setEditTarget(null);
-      setEditFront('');
-      setEditBack('');
-      setEditError(null);
+      editForm.reset({ front: '', back: '' });
+      editForm.clearErrors();
       toast.success('Zapisano zmiany fiszki.');
       await queryClient.invalidateQueries({ queryKey: FLASHCARDS_QUERY_KEY });
     },
     onError: (e) => {
       if (e instanceof FlashcardsHttpError) {
         if (e.status === 401) return redirectToLogin();
-        setEditError(e.message || 'Nie udało się zapisać fiszki.');
+        editForm.setError('root', {
+          message: e.message || 'Nie udało się zapisać fiszki.',
+        });
         return;
       }
-      setEditError(e instanceof Error ? e.message : 'Nie udało się zapisać fiszki.');
+      editForm.setError('root', {
+        message:
+          e instanceof Error ? e.message : 'Nie udało się zapisać fiszki.',
+      });
     },
   });
 
@@ -434,11 +448,10 @@ export function TopicClientInner(props: { topicId: string }) {
 
   const openEdit = React.useCallback((item: FlashcardItemVm) => {
     setEditTarget(item);
-    setEditFront(item.front);
-    setEditBack(item.back);
-    setEditError(null);
+    editForm.reset({ front: item.front, back: item.back });
+    editForm.clearErrors();
     setEditOpen(true);
-  }, []);
+  }, [editForm]);
 
   const openDelete = React.useCallback((item: FlashcardItemVm) => {
     setDeleteTarget(item);
@@ -460,27 +473,26 @@ export function TopicClientInner(props: { topicId: string }) {
     [updateFlashcardMutation]
   );
 
-  const submitCreate = React.useCallback(async () => {
-    const front = clampTrimmed(createFront, 200);
-    const back = clampTrimmed(createBack, 600);
-    if (!front) return setCreateError('Front jest wymagany (max 200 znaków).');
-    if (!back) return setCreateError('Back jest wymagany (max 600 znaków).');
-    setCreateError(null);
-    await createFlashcardMutation.mutateAsync({ front, back });
-  }, [createBack, createFlashcardMutation, createFront]);
+  const submitCreate = createForm.handleSubmit(async (values) => {
+    await createFlashcardMutation.mutateAsync({
+      front: clampTrimmed(values.front, 200),
+      back: clampTrimmed(values.back, 600),
+    });
+  });
 
-  const submitEdit = React.useCallback(async () => {
-    if (!editTarget) return;
-    const front = clampTrimmed(editFront, 200);
-    const back = clampTrimmed(editBack, 600);
-    if (!front) return setEditError('Front jest wymagany (max 200 znaków).');
-    if (!back) return setEditError('Back jest wymagany (max 600 znaków).');
-    setEditError(null);
+  const submitEdit = editForm.handleSubmit(async (values) => {
+    if (!editTarget) {
+      editForm.setError('root', { message: 'Nie wybrano fiszki do edycji.' });
+      return;
+    }
     await updateFlashcardMutation.mutateAsync({
       id: editTarget.id,
-      command: { front, back },
+      command: {
+        front: clampTrimmed(values.front, 200),
+        back: clampTrimmed(values.back, 600),
+      },
     });
-  }, [editBack, editFront, editTarget, updateFlashcardMutation]);
+  });
 
   const confirmDelete = React.useCallback(async () => {
     if (!deleteTarget) return;
@@ -854,50 +866,75 @@ export function TopicClientInner(props: { topicId: string }) {
             <DialogDescription>Tworzenie manualne. Front ≤ 200, back ≤ 600.</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3">
+          <form
+            className="space-y-3"
+            onSubmit={(e) => void submitCreate(e)}
+            noValidate
+          >
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="create-front">
                 Front
               </label>
               <Input
                 id="create-front"
-                value={createFront}
-                onChange={(e) => setCreateFront(e.target.value)}
                 disabled={createFlashcardMutation.isPending}
+                aria-invalid={Boolean(createForm.formState.errors.front) || undefined}
+                aria-describedby={
+                  createForm.formState.errors.front ? 'create-front-error' : undefined
+                }
+                {...createForm.register('front')}
               />
+              {createForm.formState.errors.front?.message ? (
+                <p id="create-front-error" className="text-sm text-destructive">
+                  {createForm.formState.errors.front.message}
+                </p>
+              ) : null}
             </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="create-back">
                 Back
               </label>
               <textarea
                 id="create-back"
-                value={createBack}
-                onChange={(e) => setCreateBack(e.target.value)}
                 disabled={createFlashcardMutation.isPending}
                 className="min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50"
+                aria-invalid={Boolean(createForm.formState.errors.back) || undefined}
+                aria-describedby={
+                  createForm.formState.errors.back ? 'create-back-error' : undefined
+                }
+                {...createForm.register('back')}
               />
+              {createForm.formState.errors.back?.message ? (
+                <p id="create-back-error" className="text-sm text-destructive">
+                  {createForm.formState.errors.back.message}
+                </p>
+              ) : null}
             </div>
-            {createError ? <p className="text-sm text-destructive">{createError}</p> : null}
-          </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setCreateOpen(false)}
-              disabled={createFlashcardMutation.isPending}
-            >
-              Anuluj
-            </Button>
-            <Button
-              type="button"
-              onClick={() => void submitCreate()}
-              disabled={createFlashcardMutation.isPending}
-            >
-              {createFlashcardMutation.isPending ? 'Dodawanie…' : 'Dodaj'}
-            </Button>
-          </DialogFooter>
+            {createForm.formState.errors.root?.message ? (
+              <p className="text-sm text-destructive">
+                {createForm.formState.errors.root.message}
+              </p>
+            ) : null}
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCreateOpen(false)}
+                disabled={createFlashcardMutation.isPending}
+              >
+                Anuluj
+              </Button>
+              <Button
+                type="submit"
+                disabled={createFlashcardMutation.isPending}
+              >
+                {createFlashcardMutation.isPending ? 'Dodawanie…' : 'Dodaj'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
@@ -915,55 +952,81 @@ export function TopicClientInner(props: { topicId: string }) {
             <DialogDescription>Źródło jest tylko do odczytu.</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3">
+          <form
+            className="space-y-3"
+            onSubmit={(e) => void submitEdit(e)}
+            noValidate
+          >
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="edit-front">
                 Front
               </label>
               <Input
                 id="edit-front"
-                value={editFront}
-                onChange={(e) => setEditFront(e.target.value)}
                 disabled={updateFlashcardMutation.isPending}
+                aria-invalid={Boolean(editForm.formState.errors.front) || undefined}
+                aria-describedby={
+                  editForm.formState.errors.front ? 'edit-front-error' : undefined
+                }
+                {...editForm.register('front')}
               />
+              {editForm.formState.errors.front?.message ? (
+                <p id="edit-front-error" className="text-sm text-destructive">
+                  {editForm.formState.errors.front.message}
+                </p>
+              ) : null}
             </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="edit-back">
                 Back
               </label>
               <textarea
                 id="edit-back"
-                value={editBack}
-                onChange={(e) => setEditBack(e.target.value)}
                 disabled={updateFlashcardMutation.isPending}
                 className="min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50"
+                aria-invalid={Boolean(editForm.formState.errors.back) || undefined}
+                aria-describedby={
+                  editForm.formState.errors.back ? 'edit-back-error' : undefined
+                }
+                {...editForm.register('back')}
               />
+              {editForm.formState.errors.back?.message ? (
+                <p id="edit-back-error" className="text-sm text-destructive">
+                  {editForm.formState.errors.back.message}
+                </p>
+              ) : null}
             </div>
+
             {editTarget ? (
               <p className="text-xs text-muted-foreground">
                 Źródło: {editTarget.source === 'manually_created' ? 'manualne' : 'AI'}
               </p>
             ) : null}
-            {editError ? <p className="text-sm text-destructive">{editError}</p> : null}
-          </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setEditOpen(false)}
-              disabled={updateFlashcardMutation.isPending}
-            >
-              Anuluj
-            </Button>
-            <Button
-              type="button"
-              onClick={() => void submitEdit()}
-              disabled={updateFlashcardMutation.isPending}
-            >
-              {updateFlashcardMutation.isPending ? 'Zapisywanie…' : 'Zapisz'}
-            </Button>
-          </DialogFooter>
+            {editForm.formState.errors.root?.message ? (
+              <p className="text-sm text-destructive">
+                {editForm.formState.errors.root.message}
+              </p>
+            ) : null}
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditOpen(false)}
+                disabled={updateFlashcardMutation.isPending}
+              >
+                Anuluj
+              </Button>
+              <Button
+                type="submit"
+                disabled={updateFlashcardMutation.isPending}
+              >
+                {updateFlashcardMutation.isPending ? 'Zapisywanie…' : 'Zapisz'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
