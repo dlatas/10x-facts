@@ -1,0 +1,20 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import AuthLayout from '@/layouts/AuthLayout.astro';
+import { NotFoundTemplate } from '@/components/errors/NotFoundTemplate';
+
+const isAuthenticated = Astro.locals.auth?.isAuthenticated ?? false;
+const requestedPath = `${Astro.url.pathname}${Astro.url.search}`;
+const title = 'Nie znaleziono strony — 10x Facts';
+
+const loginHref = `/login?next=${encodeURIComponent(requestedPath)}`;
+
+const Layout = isAuthenticated ? AppLayout : AuthLayout;
+---
+
+<Layout title={title}>
+  <NotFoundTemplate
+    requestedPath={requestedPath}
+    loginHref={loginHref}
+  />
+</Layout>

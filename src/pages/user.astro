@@ -1,0 +1,18 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { UnderConstructionTemplate } from '@/components/placeholders/UnderConstructionTemplate';
+
+if (!Astro.locals.auth?.isAuthenticated) {
+  return Astro.redirect('/login');
+}
+---
+
+<AppLayout title="Profil — 10x Facts">
+  <UnderConstructionTemplate
+    title="Strona w budowie"
+    description="Ten widok dodamy w kolejnych krokach."
+    ctaHref="/dashboard"
+    ctaLabel="Wróć do dashboardu"
+  />
+</AppLayout>
+
