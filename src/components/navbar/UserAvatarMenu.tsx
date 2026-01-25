@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { redirectToLogin } from '@/lib/http/redirect';
 import { createAuthService } from '@/lib/services/auth.service';
 
 export function UserAvatarMenu(props: { email?: string | null }) {
@@ -22,7 +23,7 @@ export function UserAvatarMenu(props: { email?: string | null }) {
     setIsLoading(true);
     try {
       await auth.logout();
-      window.location.assign('/login');
+      redirectToLogin();
     } catch {
       setIsLoading(false);
     }

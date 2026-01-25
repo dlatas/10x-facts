@@ -44,6 +44,9 @@ export interface UseCollectionTopicsDataResult {
   submitDelete: (
     topic: Pick<TopicDto, 'id' | 'system_key'>
   ) => Promise<{ ok: boolean; errorMessage: string | null }>;
+
+  // refresh
+  refreshTopics: () => Promise<void>;
 }
 
 function redirectToCollections(reason?: string): void {
