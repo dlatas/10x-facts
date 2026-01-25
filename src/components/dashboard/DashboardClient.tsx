@@ -55,23 +55,22 @@ export function DashboardClient() {
       />
 
       <main className="flex-1 p-4 md:p-8">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
               Dashboard
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Błyśnij ciekawostką: 6 losowych ulubionych fiszek.
+              Błyśnij ciekawostką: 10 losowych ulubionych fiszek.
             </p>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={() => void refreshAll()}
-            disabled={isLoading || isUpdatingFavorite}
-          >
-            Odśwież
-          </Button>
+            <Button
+              variant="default"
+              size="sm"
+            >
+              <a href="/favorites">Wszystkie ulubione</a>
+            </Button>
         </div>
 
         {error ? (

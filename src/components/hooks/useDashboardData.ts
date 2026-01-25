@@ -22,7 +22,7 @@ export function useDashboardData(args?: {
   limitFavorites?: number;
 }) {
   const limitCollections = args?.limitCollections ?? 6;
-  const limitFavorites = args?.limitFavorites ?? 6;
+  const limitFavorites = args?.limitFavorites ?? 10;
 
   const service = React.useMemo(() => createDashboardService(), []);
 

@@ -17,7 +17,8 @@ const isActive = (href: string) =>
   <div class="relative min-h-screen bg-background text-foreground">
     <div
       class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(1200px_circle_at_20%_-10%,color-mix(in_oklch,var(--primary)_18%,transparent),transparent_55%),radial-gradient(900px_circle_at_80%_0%,color-mix(in_oklch,var(--primary)_12%,transparent),transparent_60%)]"
-    ></div>
+    >
+    </div>
 
     <header
       class="sticky top-0 z-40 border-b bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60"
@@ -25,7 +26,10 @@ const isActive = (href: string) =>
       <div
         class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3"
       >
-        <a href="/dashboard" class="flex items-center gap-2">
+        <a
+          href="/dashboard"
+          class="flex items-center gap-2"
+        >
           <span
             class="inline-flex size-7 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-sm ring-1 ring-primary/20"
             aria-hidden="true"
@@ -39,10 +43,10 @@ const isActive = (href: string) =>
             <a
               href="/dashboard"
               class:list={[
-                "inline-flex items-center gap-2 rounded-full px-3 py-1.5 transition-colors",
-                isActive("/dashboard")
-                  ? "bg-primary/10 text-foreground ring-1 ring-primary/20"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                'inline-flex items-center gap-2 rounded-full px-3 py-1.5 transition-colors',
+                isActive('/dashboard')
+                  ? 'bg-primary/10 text-foreground ring-1 ring-primary/20'
+                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
               ]}
             >
               <svg
@@ -55,20 +59,44 @@ const isActive = (href: string) =>
                 stroke-linejoin="round"
                 aria-hidden="true"
               >
-                <rect x="3" y="3" width="8" height="8" rx="1.5" />
-                <rect x="13" y="3" width="8" height="8" rx="1.5" />
-                <rect x="13" y="13" width="8" height="8" rx="1.5" />
-                <rect x="3" y="13" width="8" height="8" rx="1.5" />
+                <rect
+                  x="3"
+                  y="3"
+                  width="8"
+                  height="8"
+                  rx="1.5"
+                ></rect>
+                <rect
+                  x="13"
+                  y="3"
+                  width="8"
+                  height="8"
+                  rx="1.5"
+                ></rect>
+                <rect
+                  x="13"
+                  y="13"
+                  width="8"
+                  height="8"
+                  rx="1.5"
+                ></rect>
+                <rect
+                  x="3"
+                  y="13"
+                  width="8"
+                  height="8"
+                  rx="1.5"
+                ></rect>
               </svg>
               Dashboard
             </a>
             <a
               href="/collections"
               class:list={[
-                "inline-flex items-center gap-2 rounded-full px-3 py-1.5 transition-colors",
-                isActive("/collections")
-                  ? "bg-primary/10 text-foreground ring-1 ring-primary/20"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                'inline-flex items-center gap-2 rounded-full px-3 py-1.5 transition-colors',
+                isActive('/collections')
+                  ? 'bg-primary/10 text-foreground ring-1 ring-primary/20'
+                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
               ]}
             >
               <svg
@@ -81,9 +109,37 @@ const isActive = (href: string) =>
                 stroke-linejoin="round"
                 aria-hidden="true"
               >
-                <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+                <path
+                  d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"
+                ></path>
               </svg>
               Kolekcje
+            </a>
+
+            <a
+              href="/favorites"
+              class:list={[
+                'inline-flex items-center gap-2 rounded-full px-3 py-1.5 transition-colors',
+                isActive('/favorites')
+                  ? 'bg-primary/10 text-foreground ring-1 ring-primary/20'
+                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+              ]}
+            >
+              <svg
+                class="size-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path
+                  d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"
+                ></path>
+              </svg>
+              Ulubione
             </a>
           </nav>
           <UserAvatarMenu client:load />

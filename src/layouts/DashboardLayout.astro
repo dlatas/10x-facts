@@ -85,6 +85,29 @@ const isActive = (href: string) =>
               </svg>
               Kolekcje
             </a>
+            <a
+              href="/favorites"
+              class:list={[
+                "inline-flex items-center gap-2 rounded-full px-3 py-1.5 transition-colors",
+                isActive("/favorites")
+                  ? "bg-primary/10 text-foreground ring-1 ring-primary/20"
+                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+              ]}
+            >
+              <svg
+                class="size-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" />
+              </svg>
+              Ulubione
+            </a>
           </nav>
           <UserAvatarMenu client:load />
         </div>
