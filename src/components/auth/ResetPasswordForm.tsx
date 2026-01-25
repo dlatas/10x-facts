@@ -1,4 +1,7 @@
 import * as React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -11,75 +14,40 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { createAuthService } from '@/lib/services/auth.service';
+import { authResetPasswordFormSchema } from '@/lib/validation/auth.schemas';
 
 export function ResetPasswordForm() {
   const auth = React.useMemo(() => createAuthService(), []);
 
   const passwordId = React.useId();
   const confirmId = React.useId();
-  const passwordRef = React.useRef<HTMLInputElement>(null);
-
-  const [password, setPassword] = React.useState('');
-  const [confirmPassword, setConfirmPassword] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
-
-  const [error, setError] = React.useState<string | null>(null);
-  const [passwordError, setPasswordError] = React.useState<string | null>(null);
-  const [confirmError, setConfirmError] = React.useState<string | null>(null);
+  const form = useForm<z.infer<typeof authResetPasswordFormSchema>>({
+    resolver: zodResolver(authResetPasswordFormSchema),
+    defaultValues: { password: '', confirmPassword: '' },
+  });
 
   React.useEffect(() => {
-    const t = window.setTimeout(() => passwordRef.current?.focus(), 0);
+    const t = window.setTimeout(() => form.setFocus('password'), 0);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [form]);
 
-  const validate = React.useCallback((): boolean => {
-    setError(null);
-    setPasswordError(null);
-    setConfirmError(null);
-
-    let ok = true;
-    if (!password) {
-      setPasswordError('Hasło jest wymagane.');
-      ok = false;
-    } else if (password.length < 8) {
-      setPasswordError('Hasło musi mieć co najmniej 8 znaków.');
-      ok = false;
+  const submit = form.handleSubmit(async (values) => {
+    try {
+      await auth.updatePassword({ password: values.password });
+      window.location.assign('/login?reset=success');
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Nie udało się zmienić hasła. Spróbuj ponownie.';
+      form.setError('root', { message });
     }
+  });
 
-    if (!confirmPassword) {
-      setConfirmError('Potwierdzenie hasła jest wymagane.');
-      ok = false;
-    } else if (confirmPassword !== password) {
-      setConfirmError('Hasła muszą być takie same.');
-      ok = false;
-    }
-
-    return ok;
-  }, [confirmPassword, password]);
-
-  const submit = React.useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (isLoading) return;
-      if (!validate()) return;
-
-      setIsLoading(true);
-      setError(null);
-      try {
-        await auth.updatePassword({ password });
-        window.location.assign('/login?reset=success');
-      } catch (err) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : 'Nie udało się zmienić hasła. Spróbuj ponownie.';
-        setError(message);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [auth, isLoading, password, validate]
-  );
+  const isLoading = form.formState.isSubmitting;
+  const error = form.formState.errors.root?.message ?? null;
+  const passwordError = form.formState.errors.password?.message ?? null;
+  const confirmError = form.formState.errors.confirmPassword?.message ?? null;
 
   return (
     <Card>
@@ -109,16 +77,14 @@ export function ResetPasswordForm() {
             </label>
             <Input
               id={passwordId}
-              ref={passwordRef}
               type="password"
-              value={password}
               disabled={isLoading}
               placeholder="min. 8 znaków"
               aria-invalid={passwordError ? true : undefined}
               aria-describedby={
                 passwordError ? `${passwordId}-error` : undefined
               }
-              onChange={(e) => setPassword(e.currentTarget.value)}
+              {...form.register('password')}
             />
             {passwordError ? (
               <p
@@ -140,12 +106,11 @@ export function ResetPasswordForm() {
             <Input
               id={confirmId}
               type="password"
-              value={confirmPassword}
               disabled={isLoading}
               placeholder="powtórz hasło"
               aria-invalid={confirmError ? true : undefined}
               aria-describedby={confirmError ? `${confirmId}-error` : undefined}
-              onChange={(e) => setConfirmPassword(e.currentTarget.value)}
+              {...form.register('confirmPassword')}
             />
             {confirmError ? (
               <p

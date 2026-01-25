@@ -1,4 +1,7 @@
 import * as React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -11,8 +14,8 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { getSafeNextPath } from '@/lib/http/redirect';
-import { isValidEmail } from '@/lib/validation/email';
 import { createAuthService } from '@/lib/services/auth.service';
+import { authLoginCommandSchema } from '@/lib/validation/auth.schemas';
 
 export function LoginForm(props: { next?: string | null }) {
   const next = props.next ?? null;
@@ -20,59 +23,21 @@ export function LoginForm(props: { next?: string | null }) {
 
   const emailId = React.useId();
   const passwordId = React.useId();
-  const emailRef = React.useRef<HTMLInputElement>(null);
 
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
-
-  const [error, setError] = React.useState<string | null>(null);
-  const [emailError, setEmailError] = React.useState<string | null>(null);
-  const [passwordError, setPasswordError] = React.useState<string | null>(null);
+  const form = useForm<z.infer<typeof authLoginCommandSchema>>({
+    resolver: zodResolver(authLoginCommandSchema),
+    defaultValues: { email: '', password: '' },
+  });
 
   React.useEffect(() => {
-    const t = window.setTimeout(() => emailRef.current?.focus(), 0);
+    const t = window.setTimeout(() => form.setFocus('email'), 0);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [form]);
 
-  const validate = React.useCallback((): boolean => {
-    setError(null);
-    setEmailError(null);
-    setPasswordError(null);
-
-    const e = email.trim();
-    const p = password;
-
-    let ok = true;
-    if (!e) {
-      setEmailError('E-mail jest wymagany.');
-      ok = false;
-    } else if (!isValidEmail(e)) {
-      setEmailError('Podaj poprawny adres e-mail.');
-      ok = false;
-    }
-
-    if (!p) {
-      setPasswordError('Hasło jest wymagane.');
-      ok = false;
-    } else if (p.length < 8) {
-      setPasswordError('Hasło musi mieć co najmniej 8 znaków.');
-      ok = false;
-    }
-
-    return ok;
-  }, [email, password]);
-
-  const submit = React.useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (isLoading) return;
-      if (!validate()) return;
-
-      setIsLoading(true);
-      setError(null);
+  const submit = form.handleSubmit(async (values) => {
+    try {
       try {
-        await auth.login({ email, password });
+        await auth.login({ email: values.email, password: values.password });
         const target = getSafeNextPath(next) ?? '/dashboard';
         window.location.assign(target);
       } catch (err) {
@@ -80,13 +45,19 @@ export function LoginForm(props: { next?: string | null }) {
           err instanceof Error
             ? err.message
             : 'Nie udało się zalogować. Spróbuj ponownie.';
-        setError(message);
-      } finally {
-        setIsLoading(false);
+        form.setError('root', { message });
       }
-    },
-    [auth, email, isLoading, next, password, validate]
-  );
+    } catch {
+      form.setError('root', {
+        message: 'Nie udało się zalogować. Spróbuj ponownie.',
+      });
+    }
+  });
+
+  const error = form.formState.errors.root?.message ?? null;
+  const emailError = form.formState.errors.email?.message ?? null;
+  const passwordError = form.formState.errors.password?.message ?? null;
+  const isLoading = form.formState.isSubmitting;
 
   return (
     <Card>
@@ -116,15 +87,13 @@ export function LoginForm(props: { next?: string | null }) {
             </label>
             <Input
               id={emailId}
-              ref={emailRef}
               type="email"
-              value={email}
               disabled={isLoading}
               autoComplete="email"
               placeholder="twoj@email.com"
               aria-invalid={emailError ? true : undefined}
               aria-describedby={emailError ? `${emailId}-error` : undefined}
-              onChange={(e) => setEmail(e.currentTarget.value)}
+              {...form.register('email')}
             />
             {emailError ? (
               <p
@@ -146,7 +115,6 @@ export function LoginForm(props: { next?: string | null }) {
             <Input
               id={passwordId}
               type="password"
-              value={password}
               disabled={isLoading}
               autoComplete="current-password"
               placeholder="••••••••"
@@ -154,7 +122,7 @@ export function LoginForm(props: { next?: string | null }) {
               aria-describedby={
                 passwordError ? `${passwordId}-error` : undefined
               }
-              onChange={(e) => setPassword(e.currentTarget.value)}
+              {...form.register('password')}
             />
             {passwordError ? (
               <p

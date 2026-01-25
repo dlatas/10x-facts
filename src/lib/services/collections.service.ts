@@ -78,7 +78,7 @@ export async function listCollections(
       system_key: string | null;
       created_at: string;
       updated_at: string;
-      topics?: Array<{ count: number }>;
+      topics?: { count: number }[];
     };
 
     const topics_count =

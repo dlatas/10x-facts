@@ -1,4 +1,7 @@
 import * as React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -11,8 +14,8 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { getSafeNextPath } from '@/lib/http/redirect';
-import { isValidEmail } from '@/lib/validation/email';
 import { createAuthService } from '@/lib/services/auth.service';
+import { authSignupFormSchema } from '@/lib/validation/auth.schemas';
 
 export function RegisterForm(props: { next?: string | null }) {
   const next = props.next ?? null;
@@ -21,95 +24,49 @@ export function RegisterForm(props: { next?: string | null }) {
 
   const emailId = React.useId();
   const passwordId = React.useId();
-  const emailRef = React.useRef<HTMLInputElement>(null);
+  const confirmId = React.useId();
 
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [confirmPassword, setConfirmPassword] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
-
-  const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<string | null>(null);
-  const [emailError, setEmailError] = React.useState<string | null>(null);
-  const [passwordError, setPasswordError] = React.useState<string | null>(null);
-  const [confirmPasswordError, setConfirmPasswordError] = React.useState<
-    string | null
-  >(null);
+  const form = useForm<z.infer<typeof authSignupFormSchema>>({
+    resolver: zodResolver(authSignupFormSchema),
+    defaultValues: { email: '', password: '', confirmPassword: '' },
+  });
 
   React.useEffect(() => {
-    const t = window.setTimeout(() => emailRef.current?.focus(), 0);
+    const t = window.setTimeout(() => form.setFocus('email'), 0);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [form]);
 
-  const validate = React.useCallback((): boolean => {
-    setError(null);
+  const submit = form.handleSubmit(async (values) => {
     setSuccess(null);
-    setEmailError(null);
-    setPasswordError(null);
-    setConfirmPasswordError(null);
-
-    const e = email.trim();
-    const p = password;
-    const c = confirmPassword;
-
-    let ok = true;
-    if (!e) {
-      setEmailError('E-mail jest wymagany.');
-      ok = false;
-    } else if (!isValidEmail(e)) {
-      setEmailError('Podaj poprawny adres e-mail.');
-      ok = false;
-    }
-
-    if (!p) {
-      setPasswordError('Hasło jest wymagane.');
-      ok = false;
-    } else if (p.length < 8) {
-      setPasswordError('Hasło musi mieć co najmniej 8 znaków.');
-      ok = false;
-    }
-
-    if (!c) {
-      setConfirmPasswordError('Potwierdzenie hasła jest wymagane.');
-      ok = false;
-    } else if (p && c !== p) {
-      setConfirmPasswordError('Hasła nie są identyczne.');
-      ok = false;
-    }
-
-    return ok;
-  }, [confirmPassword, email, password]);
-
-  const submit = React.useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (isLoading) return;
-      if (!validate()) return;
-
-      setIsLoading(true);
-      setError(null);
-      try {
-        const result = await auth.signup({ email, password });
-        if (result.requiresEmailConfirmation) {
-          setSuccess(
-            'Wysłaliśmy e-mail z linkiem potwierdzającym. Sprawdź skrzynkę (także spam) i aktywuj konto, aby się zalogować.'
-          );
-          return;
-        }
-        const target = safeNext ?? '/dashboard';
-        window.location.assign(target);
-      } catch (err) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : 'Nie udało się założyć konta. Spróbuj ponownie.';
-        setError(message);
-      } finally {
-        setIsLoading(false);
+    try {
+      const result = await auth.signup({
+        email: values.email,
+        password: values.password,
+      });
+      if (result.requiresEmailConfirmation) {
+        setSuccess(
+          'Wysłaliśmy e-mail z linkiem potwierdzającym. Sprawdź skrzynkę (także spam) i aktywuj konto, aby się zalogować.'
+        );
+        return;
       }
-    },
-    [auth, email, isLoading, password, safeNext, validate]
-  );
+      const target = safeNext ?? '/dashboard';
+      window.location.assign(target);
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Nie udało się założyć konta. Spróbuj ponownie.';
+      form.setError('root', { message });
+    }
+  });
+
+  const isLoading = form.formState.isSubmitting;
+  const error = form.formState.errors.root?.message ?? null;
+  const emailError = form.formState.errors.email?.message ?? null;
+  const passwordError = form.formState.errors.password?.message ?? null;
+  const confirmPasswordError =
+    form.formState.errors.confirmPassword?.message ?? null;
 
   const showLoginHint =
     error?.toLowerCase().includes('konto z tym adresem e-mail już istnieje') ??
@@ -161,14 +118,12 @@ export function RegisterForm(props: { next?: string | null }) {
             </label>
             <Input
               id={emailId}
-              ref={emailRef}
               type="email"
-              value={email}
               disabled={isLoading}
               placeholder="twoj@email.com"
               aria-invalid={emailError ? true : undefined}
               aria-describedby={emailError ? `${emailId}-error` : undefined}
-              onChange={(e) => setEmail(e.currentTarget.value)}
+              {...form.register('email')}
             />
             {emailError ? (
               <p
@@ -190,7 +145,6 @@ export function RegisterForm(props: { next?: string | null }) {
             <Input
               id={passwordId}
               type="password"
-              value={password}
               disabled={isLoading}
               autoComplete="new-password"
               placeholder="min. 8 znaków"
@@ -198,7 +152,7 @@ export function RegisterForm(props: { next?: string | null }) {
               aria-describedby={
                 passwordError ? `${passwordId}-error` : undefined
               }
-              onChange={(e) => setPassword(e.currentTarget.value)}
+              {...form.register('password')}
             />
             {passwordError ? (
               <p
@@ -213,26 +167,25 @@ export function RegisterForm(props: { next?: string | null }) {
           <div className="grid gap-2">
             <label
               className="text-sm font-medium"
-              htmlFor={`${passwordId}-confirm`}
+              htmlFor={confirmId}
             >
               Powtórz hasło
             </label>
             <Input
-              id={`${passwordId}-confirm`}
+              id={confirmId}
               type="password"
-              value={confirmPassword}
               disabled={isLoading}
               autoComplete="new-password"
               placeholder="powtórz hasło"
               aria-invalid={confirmPasswordError ? true : undefined}
               aria-describedby={
-                confirmPasswordError ? `${passwordId}-confirm-error` : undefined
+                confirmPasswordError ? `${confirmId}-error` : undefined
               }
-              onChange={(e) => setConfirmPassword(e.currentTarget.value)}
+              {...form.register('confirmPassword')}
             />
             {confirmPasswordError ? (
               <p
-                id={`${passwordId}-confirm-error`}
+                id={`${confirmId}-error`}
                 className="text-sm text-destructive"
               >
                 {confirmPasswordError}

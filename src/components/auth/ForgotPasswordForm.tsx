@@ -1,4 +1,7 @@
 import * as React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -10,66 +13,46 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { isValidEmail } from '@/lib/validation/email';
 import { createAuthService } from '@/lib/services/auth.service';
+import { authForgotPasswordCommandSchema } from '@/lib/validation/auth.schemas';
 
 export function ForgotPasswordForm() {
   const auth = React.useMemo(() => createAuthService(), []);
 
   const emailId = React.useId();
-  const emailRef = React.useRef<HTMLInputElement>(null);
-
-  const [email, setEmail] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
   const [sent, setSent] = React.useState(false);
-
-  const [error, setError] = React.useState<string | null>(null);
-  const [emailError, setEmailError] = React.useState<string | null>(null);
+  const form = useForm<z.infer<typeof authForgotPasswordCommandSchema>>({
+    resolver: zodResolver(authForgotPasswordCommandSchema),
+    defaultValues: { email: '' },
+  });
 
   React.useEffect(() => {
-    const t = window.setTimeout(() => emailRef.current?.focus(), 0);
+    const t = window.setTimeout(() => form.setFocus('email'), 0);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [form]);
 
-  const validate = React.useCallback((): boolean => {
-    setError(null);
-    setEmailError(null);
-
-    const e = email.trim();
-    if (!e) {
-      setEmailError('E-mail jest wymagany.');
-      return false;
-    }
-    if (!isValidEmail(e)) {
-      setEmailError('Podaj poprawny adres e-mail.');
-      return false;
-    }
-    return true;
-  }, [email]);
-
-  const submit = React.useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (isLoading) return;
-      if (!validate()) return;
-
-      setIsLoading(true);
-      setError(null);
+  const submit = form.handleSubmit(async (values) => {
+    try {
       try {
-        await auth.requestPasswordReset({ email });
+        await auth.requestPasswordReset({ email: values.email });
         setSent(true);
       } catch (err) {
         const message =
           err instanceof Error
             ? err.message
             : 'Nie udało się wysłać linku. Spróbuj ponownie.';
-        setError(message);
-      } finally {
-        setIsLoading(false);
+        form.setError('root', { message });
       }
-    },
-    [auth, email, isLoading, validate]
-  );
+    } catch {
+      form.setError('root', {
+        message: 'Nie udało się wysłać linku. Spróbuj ponownie.',
+      });
+    }
+  });
+
+  const isLoading = form.formState.isSubmitting;
+  const error = form.formState.errors.root?.message ?? null;
+  const emailError = form.formState.errors.email?.message ?? null;
 
   return (
     <Card>
@@ -108,14 +91,12 @@ export function ForgotPasswordForm() {
               </label>
               <Input
                 id={emailId}
-                ref={emailRef}
                 type="email"
-                value={email}
                 disabled={isLoading}
                 placeholder="twoj@email.com"
                 aria-invalid={emailError ? true : undefined}
                 aria-describedby={emailError ? `${emailId}-error` : undefined}
-                onChange={(e) => setEmail(e.currentTarget.value)}
+                {...form.register('email')}
               />
               {emailError ? (
                 <p

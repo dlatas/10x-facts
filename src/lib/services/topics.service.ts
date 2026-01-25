@@ -121,7 +121,7 @@ export async function listTopicsInCollection(
       system_key: string | null;
       created_at: string;
       updated_at: string;
-      flashcards?: Array<{ count: number }>;
+      flashcards?: { count: number }[];
     };
 
     const flashcards_count =
