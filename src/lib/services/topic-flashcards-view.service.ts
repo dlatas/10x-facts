@@ -7,19 +7,15 @@ import type {
   UpdateFlashcardCommand,
   UpdateFlashcardResponseDto,
 } from '@/types';
+import { fetchJson } from '@/lib/http/fetch-json';
+import { HttpError } from '@/lib/http/http-error';
 
 interface TopicFlashcardsViewServiceOptions {
   baseUrl?: string;
   accessToken?: string;
 }
 
-export class HttpError extends Error {
-  readonly status: number;
-  constructor(status: number, message: string) {
-    super(message);
-    this.status = status;
-  }
-}
+export { HttpError };
 
 function buildFlashcardsListUrl(args: {
   baseUrl: string;
@@ -47,50 +43,6 @@ function buildFlashcardsListUrl(args: {
   if (typeof args.query.order === 'string') sp.set('order', args.query.order);
 
   return `${url.pathname}${url.search}`;
-}
-
-async function fetchJson<T>(args: {
-  url: string;
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
-  body?: unknown;
-  accessToken?: string;
-}): Promise<T> {
-  const res = await fetch(args.url, {
-    method: args.method ?? 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(args.accessToken
-        ? { Authorization: `Bearer ${args.accessToken}` }
-        : {}),
-    },
-    body: args.body ? JSON.stringify(args.body) : undefined,
-  });
-
-  if (res.ok) return (await res.json()) as T;
-
-  let message = res.statusText || 'Nieznany błąd.';
-  const contentType = res.headers.get('Content-Type') ?? '';
-
-  if (contentType.includes('application/json')) {
-    const payload = await res.json().catch(() => null);
-    if (payload && typeof payload === 'object') {
-      const errorMessage =
-        (payload as { error?: { message?: string } }).error?.message ??
-        (payload as { message?: string }).message;
-      if (errorMessage && typeof errorMessage === 'string') {
-        message = errorMessage;
-      } else {
-        message = JSON.stringify(payload);
-      }
-    }
-  } else {
-    const text = await res.text().catch(() => '');
-    if (text) message = text;
-  }
-
-  if (res.status === 401)
-    throw new HttpError(401, message || 'Brak autoryzacji (401).');
-  throw new HttpError(res.status, message);
 }
 
 export function createTopicFlashcardsViewService(

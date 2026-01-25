@@ -1,3 +1,6 @@
+import { fetchJson } from '@/lib/http/fetch-json';
+import { HttpError } from '@/lib/http/http-error';
+
 interface AuthServiceOptions {
   /**
    * Gdy true – serwis używa mocków zamiast realnych endpointów.
@@ -10,14 +13,6 @@ interface AuthServiceOptions {
   baseUrl?: string;
 }
 
-class HttpError extends Error {
-  readonly status: number;
-  constructor(status: number, message: string) {
-    super(message);
-    this.status = status;
-  }
-}
-
 function getDefaultMockFlag(): boolean {
   // Domyślnie mock=FALSE, bo backend auth jest dostępny.
   const v = import.meta.env.PUBLIC_AUTH_API_MOCK;
@@ -27,45 +22,6 @@ function getDefaultMockFlag(): boolean {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
-}
-
-async function fetchJson<T>(args: {
-  url: string;
-  method?: 'GET' | 'POST';
-  body?: unknown;
-}): Promise<T> {
-  const res = await fetch(args.url, {
-    method: args.method ?? 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    body: args.body ? JSON.stringify(args.body) : undefined,
-  });
-
-  if (res.ok) return (await res.json()) as T;
-
-  let message = res.statusText || 'Nieznany błąd.';
-  const contentType = res.headers.get('Content-Type') ?? '';
-
-  if (contentType.includes('application/json')) {
-    const payload = await res.json().catch(() => null);
-    if (payload && typeof payload === 'object') {
-      const errorMessage =
-        (payload as { error?: { message?: string } }).error?.message ??
-        (payload as { message?: string }).message;
-      if (errorMessage && typeof errorMessage === 'string') {
-        message = errorMessage;
-      } else {
-        message = JSON.stringify(payload);
-      }
-    }
-  } else {
-    const text = await res.text().catch(() => '');
-    if (text) message = text;
-  }
-
-  if (res.status === 401) {
-    throw new HttpError(401, message || 'Brak autoryzacji (401).');
-  }
-  throw new HttpError(res.status, message);
 }
 
 export function createAuthService(opts?: AuthServiceOptions) {

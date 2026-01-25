@@ -10,63 +10,15 @@ import type {
   AiSkipCommand,
   AiSkipResponseDto,
 } from '@/types';
+import { fetchJson } from '@/lib/http/fetch-json';
+import { HttpError } from '@/lib/http/http-error';
 
 interface AiViewServiceOptions {
   baseUrl?: string;
   accessToken?: string;
 }
 
-export class HttpError extends Error {
-  readonly status: number;
-  constructor(status: number, message: string) {
-    super(message);
-    this.status = status;
-  }
-}
-
-async function fetchJson<T>(args: {
-  url: string;
-  method: 'POST';
-  body: unknown;
-  accessToken?: string;
-}): Promise<T> {
-  const res = await fetch(args.url, {
-    method: args.method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(args.accessToken
-        ? { Authorization: `Bearer ${args.accessToken}` }
-        : {}),
-    },
-    body: JSON.stringify(args.body),
-  });
-
-  if (res.ok) return (await res.json()) as T;
-
-  let message = res.statusText || 'Nieznany błąd.';
-  const contentType = res.headers.get('Content-Type') ?? '';
-
-  if (contentType.includes('application/json')) {
-    const payload = await res.json().catch(() => null);
-    if (payload && typeof payload === 'object') {
-      const errorMessage =
-        (payload as { error?: { message?: string } }).error?.message ??
-        (payload as { message?: string }).message;
-      if (errorMessage && typeof errorMessage === 'string') {
-        message = errorMessage;
-      } else {
-        message = JSON.stringify(payload);
-      }
-    }
-  } else {
-    const text = await res.text().catch(() => '');
-    if (text) message = text;
-  }
-
-  if (res.status === 401)
-    throw new HttpError(401, message || 'Brak autoryzacji (401).');
-  throw new HttpError(res.status, message);
-}
+export { HttpError };
 
 export function createAiViewService(opts?: AiViewServiceOptions) {
   const baseUrl = opts?.baseUrl ?? '';

@@ -6,6 +6,8 @@ import type {
   FavoriteFlashcardDto,
   FavoritesRandomResponseDto,
 } from '@/types';
+import { fetchJson } from '@/lib/http/fetch-json';
+import { HttpError } from '@/lib/http/http-error';
 
 interface DashboardServiceOptions {
   /**
@@ -23,48 +25,11 @@ interface DashboardServiceOptions {
   accessToken?: string;
 }
 
-class HttpError extends Error {
-  readonly status: number;
-  constructor(status: number, message: string) {
-    super(message);
-    this.status = status;
-  }
-}
-
 function getDefaultMockFlag(): boolean {
   // Domyślnie mock=FALSE, bo endpointy są dostępne (collections + favorites/random).
   const v = import.meta.env.PUBLIC_DASHBOARD_API_MOCK;
   if (typeof v !== 'string' || v.length === 0) return false;
   return v === 'true';
-}
-
-async function fetchJson<T>(args: {
-  url: string;
-  method?: 'GET' | 'POST' | 'PATCH';
-  body?: unknown;
-  accessToken?: string;
-}): Promise<T> {
-  const res = await fetch(args.url, {
-    method: args.method ?? 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(args.accessToken
-        ? { Authorization: `Bearer ${args.accessToken}` }
-        : {}),
-    },
-    body: args.body ? JSON.stringify(args.body) : undefined,
-  });
-
-  if (res.ok) {
-    return (await res.json()) as T;
-  }
-
-  const text = await res.text().catch(() => '');
-  if (res.status === 401) throw new HttpError(401, 'Brak autoryzacji (401).');
-  throw new HttpError(
-    res.status,
-    `Błąd API (${res.status}): ${text || res.statusText}`
-  );
 }
 
 function sleep(ms: number): Promise<void> {
