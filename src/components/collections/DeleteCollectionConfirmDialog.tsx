@@ -51,6 +51,7 @@ export const DeleteCollectionConfirmDialog = React.memo(
             >
               Anuluj
             </Button>
+            
             <Button
               type="button"
               variant="destructive"

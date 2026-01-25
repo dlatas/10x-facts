@@ -21,6 +21,7 @@ export interface CollectionsListItemVm {
   name: string;
   systemKey: string | null;
   isSystem: boolean;
+  topicsCount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -32,6 +33,7 @@ function mapDtoToVm(dto: CollectionDto): CollectionsListItemVm {
     name: systemKey === RANDOM_SYSTEM_KEY ? RANDOM_COLLECTION_LABEL : dto.name,
     systemKey,
     isSystem: systemKey != null,
+    topicsCount: typeof dto.topics_count === 'number' ? dto.topics_count : 0,
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
   };

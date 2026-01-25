@@ -46,7 +46,8 @@ export function DashboardSidebar(props: {
   isCreatingCollection?: boolean;
 }) {
   return (
-    <aside className="w-full border-b p-4 md:w-72 md:border-b-0 md:border-r">
+    <aside className="w-full p-4 md:w-72 md:pr-0">
+      <div className="rounded-2xl border bg-muted/40 p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold tracking-tight">Kolekcje</h2>
         <Button variant="ghost" size="sm" asChild>
@@ -73,6 +74,7 @@ export function DashboardSidebar(props: {
           onCreate={props.onCollectionCreate}
           isLoading={props.isCreatingCollection ?? false}
         />
+      </div>
       </div>
     </aside>
   );

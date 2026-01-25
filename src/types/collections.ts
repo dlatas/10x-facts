@@ -6,7 +6,13 @@ import type { Collection } from '@/types/entities';
 export type CollectionDto = Pick<
   Collection,
   'id' | 'name' | 'system_key' | 'created_at' | 'updated_at'
->;
+> & {
+  /**
+   * Opcjonalne pole agregujące (np. liczba tematów w kolekcji).
+   * Dla części endpointów może nie być zwracane.
+   */
+  topics_count?: number;
+};
 
 export interface CollectionsListQuery {
   q?: string;

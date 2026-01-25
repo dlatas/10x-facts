@@ -32,6 +32,8 @@ export function CollectionTopicsClient(props: { collectionId: string }) {
         description: dto.description ?? null,
         systemKey,
         isSystem: systemKey != null,
+        flashcardsCount:
+          typeof dto.flashcards_count === 'number' ? dto.flashcards_count : 0,
         createdAt: dto.created_at,
         updatedAt: dto.updated_at,
       };

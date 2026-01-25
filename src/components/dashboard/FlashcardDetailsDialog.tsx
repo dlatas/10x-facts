@@ -24,7 +24,7 @@ export function FlashcardDetailsDialog(props: {
         if (!next) onClose();
       }}
     >
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl md:max-w-3xl">
         <DialogHeader>
           <div className="flex items-start justify-between gap-3">
             <DialogTitle className="min-w-0 flex-1">{flashcard?.front ?? ""}</DialogTitle>

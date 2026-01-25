@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { X } from 'lucide-react';
 
 import type { CollectionsListItemVm } from '@/components/hooks/useCollectionsView';
 import { Button } from '@/components/ui/button';
@@ -15,34 +16,50 @@ export const CollectionRow = React.memo(function CollectionRow(props: Collection
   const topicsHref = `/collections/${encodeURIComponent(props.item.id)}/topics?collectionName=${encodeURIComponent(props.item.name)}`;
 
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <Card className="relative cursor-pointer transition-colors hover:bg-accent/30">
+      <a
+        href={topicsHref}
+        aria-label={`Otwórz kolekcję: ${props.item.name}`}
+        className="absolute inset-0 z-0 rounded-xl focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+      />
+      <CardContent className="pointer-events-none relative z-10 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="truncate font-medium">{props.item.name}</p>
+            <span
+              className="inline-flex size-6 items-center justify-center rounded-full border bg-background text-xs font-semibold text-muted-foreground"
+              title={`Liczba tematów: ${props.item.topicsCount}`}
+              aria-label={`Liczba tematów: ${props.item.topicsCount}`}
+            >
+              {props.item.topicsCount}
+            </span>
             {props.item.systemKey ? <SystemBadge systemKey={props.item.systemKey} /> : null}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button asChild variant="outline">
-            <a href={topicsHref}>Tematy</a>
-          </Button>
-
+        <div className="pointer-events-auto relative z-20 flex items-center gap-2">
           {canDelete ? (
             <Button
-              variant="destructive"
-              onClick={() => props.onDeleteRequest(props.item)}
+              variant="outline"
+              size="icon"
+              aria-label="Usuń kolekcję"
+              title="Usuń kolekcję"
+              className="text-destructive hover:text-destructive"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                props.onDeleteRequest(props.item);
+              }}
             >
-              Usuń
+              <X />
             </Button>
           ) : (
             <span
               title="Nie można usunąć — to kolekcja systemowa."
               className="cursor-not-allowed"
             >
-              <Button variant="destructive" disabled>
-                Usuń
+              <Button variant="outline" size="icon" disabled aria-label="Usuń (niedostępne)">
+                <X />
               </Button>
             </span>
           )}

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Heart } from 'lucide-react';
+import { Heart, Pencil, X } from 'lucide-react';
 
 import type {
   CreateFlashcardCommand,
@@ -11,6 +11,7 @@ import type {
 import { createCollectionTopicsViewService, HttpError as TopicsHttpError } from '@/lib/services/collection-topics-view.service';
 import { createTopicFlashcardsViewService, HttpError as FlashcardsHttpError } from '@/lib/services/topic-flashcards-view.service';
 import { createAiViewService, HttpError as AiHttpError } from '@/lib/services/ai-view.service';
+import { fireConfetti } from '../../lib/confetti';
 import { useTopicUrlState } from './useTopicUrlState';
 import { mapFlashcardDtoToVm, mapTopicDtoToVm } from './topic.types';
 import type { FlashcardItemVm, TopicHeaderVm } from './topic.types';
@@ -75,6 +76,9 @@ export function TopicClientInner(props: { topicId: string }) {
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [deleteTarget, setDeleteTarget] = React.useState<FlashcardItemVm | null>(null);
 
+  const [previewOpen, setPreviewOpen] = React.useState(false);
+  const [previewTarget, setPreviewTarget] = React.useState<FlashcardItemVm | null>(null);
+
   const [aiOpen, setAiOpen] = React.useState(false);
   const [aiProposal, setAiProposal] = React.useState<{ front: string; back: string } | null>(
     null
@@ -129,7 +133,11 @@ export function TopicClientInner(props: { topicId: string }) {
   React.useEffect(() => {
     if (!topicQuery.data) return;
     // inicjalizacja draftu opisu po załadowaniu tematu
-    setDescriptionDraft(topicQuery.data.description ?? '');
+    const raw = topicQuery.data.description ?? '';
+    // legacy fallback: kiedyś DB miało default "example description."
+    const cleaned =
+      raw.trim().toLowerCase() === 'example description.' ? '' : raw;
+    setDescriptionDraft(cleaned);
   }, [topicQuery.data]);
 
   const flashcardsQuery = useQuery({
@@ -285,6 +293,15 @@ export function TopicClientInner(props: { topicId: string }) {
       setAiRandomDomainLabel(res.random_domain_label ?? null);
       setAiProposal(res.proposal);
       setAiOpen(true);
+
+      // Konfetti w momencie, gdy wygenerowana fiszka pojawia się w UI (modal z propozycją).
+      if (typeof window !== 'undefined') {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            void fireConfetti();
+          });
+        });
+      }
     },
     onError: (e) => {
       if (e instanceof AiHttpError) {
@@ -317,6 +334,7 @@ export function TopicClientInner(props: { topicId: string }) {
       setAiProposal(null);
       toast.success('Zapisano wygenerowaną fiszkę.');
       await queryClient.invalidateQueries({ queryKey: FLASHCARDS_QUERY_KEY });
+      await queryClient.refetchQueries({ queryKey: FLASHCARDS_QUERY_KEY });
     },
     onError: (e) => {
       if (e instanceof AiHttpError) {
@@ -387,6 +405,28 @@ export function TopicClientInner(props: { topicId: string }) {
     topicQuery.data?.systemKey === 'random_topic' ||
     url.context.topicNameFromUrl?.trim().toLowerCase() === 'temat losowy';
 
+  const topicDescriptionRaw = topicQuery.data?.description ?? '';
+  // legacy fallback: kiedyś DB miało default "example description."
+  const topicDescriptionCleaned =
+    topicDescriptionRaw.trim().toLowerCase() === 'example description.'
+      ? ''
+      : topicDescriptionRaw;
+  const topicDescriptionLength = topicDescriptionCleaned.trim().length;
+
+  const isAiBlockedByMissingDescription =
+    !isRandomTopic && topicDescriptionLength < 1;
+  const aiBlockedTooltip = isAiBlockedByMissingDescription
+    ? 'Opis tematu jest wymagany, aby móc wygenerować fiszkę'
+    : undefined;
+
+  const onAiGenerateClick = React.useCallback(async () => {
+    if (isAiBlockedByMissingDescription) {
+      toast.error('Opis tematu jest wymagany, aby móc wygenerować fiszkę');
+      return;
+    }
+    await aiGenerateMutation.mutateAsync();
+  }, [aiGenerateMutation, isAiBlockedByMissingDescription]);
+
   const backHref =
     url.context.fromCollectionId
       ? (() => {
@@ -412,6 +452,11 @@ export function TopicClientInner(props: { topicId: string }) {
   const openDelete = React.useCallback((item: FlashcardItemVm) => {
     setDeleteTarget(item);
     setDeleteOpen(true);
+  }, []);
+
+  const openPreview = React.useCallback((item: FlashcardItemVm) => {
+    setPreviewTarget(item);
+    setPreviewOpen(true);
   }, []);
 
   const toggleFavorite = React.useCallback(
@@ -466,7 +511,7 @@ export function TopicClientInner(props: { topicId: string }) {
     <main className="p-4 md:p-8">
       <div className="space-y-3">
         <Button asChild variant="outline" size="sm" className="w-fit">
-          <a href={backHref}>Wróć</a>
+          <a href={backHref}>Wróć do tematu</a>
         </Button>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -511,14 +556,18 @@ export function TopicClientInner(props: { topicId: string }) {
           <Button type="button" onClick={() => setCreateOpen(true)}>
             Dodaj fiszkę
           </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => void aiGenerateMutation.mutateAsync()}
-            disabled={aiGenerateMutation.isPending}
-          >
-            {aiGenerateMutation.isPending ? 'Generowanie…' : 'Generuj AI'}
-          </Button>
+          <span className="inline-block" title={aiBlockedTooltip}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => void onAiGenerateClick()}
+              disabled={
+                aiGenerateMutation.isPending || isAiBlockedByMissingDescription
+              }
+            >
+              {aiGenerateMutation.isPending ? 'Generowanie…' : 'Generuj AI'}
+            </Button>
+          </span>
         </div>
 
         {flashcardsQuery.isLoading ? (
@@ -569,13 +618,18 @@ export function TopicClientInner(props: { topicId: string }) {
                 ) : (
                   <>
                     <Button onClick={() => setCreateOpen(true)}>Dodaj fiszkę</Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => void aiGenerateMutation.mutateAsync()}
-                      disabled={aiGenerateMutation.isPending}
-                    >
-                      Generuj AI
-                    </Button>
+                    <span className="inline-block" title={aiBlockedTooltip}>
+                      <Button
+                        variant="secondary"
+                        onClick={() => void onAiGenerateClick()}
+                        disabled={
+                          aiGenerateMutation.isPending ||
+                          isAiBlockedByMissingDescription
+                        }
+                      >
+                        Generuj AI
+                      </Button>
+                    </span>
                   </>
                 )}
               </div>
@@ -584,56 +638,97 @@ export function TopicClientInner(props: { topicId: string }) {
         ) : (
           <div className="space-y-3">
             {items.map((f) => (
-              <Card key={f.id}>
+              <Card
+                key={f.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => openPreview(f)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openPreview(f);
+                  }
+                }}
+                className="cursor-pointer transition-colors hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                aria-label={`Otwórz fiszkę: ${f.front}`}
+              >
                 <CardContent className="p-4">
                   <div className="flex flex-col gap-3">
                     <div className="flex items-start justify-between gap-3">
-                      <p className="min-w-0 flex-1 font-medium">{f.front}</p>
-                      <Button
-                        variant="outline"
-                        onClick={() => void toggleFavorite(f)}
-                        disabled={updateFlashcardMutation.isPending}
-                        size="icon"
-                        aria-label={
-                          f.isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'
-                        }
-                        aria-pressed={f.isFavorite}
-                        title={f.isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
-                      >
-                        <Heart
-                          className={
-                            f.isFavorite
-                              ? 'fill-red-500 text-red-500'
-                              : 'fill-transparent text-muted-foreground'
+                      <div className="min-w-0 flex-1">
+                        <p className="min-w-0 truncate font-medium">{f.front}</p>
+
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <span className="rounded-full border px-2 py-0.5">
+                            {f.source === 'manually_created' ? 'manual' : 'ai'}
+                          </span>
+                          {f.editedByUser ? (
+                            <span className="rounded-full border px-2 py-0.5">
+                              edytowana
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          disabled={updateFlashcardMutation.isPending}
+                          size="icon"
+                          aria-label={
+                            f.isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'
                           }
-                        />
-                      </Button>
+                          aria-pressed={f.isFavorite}
+                          title={
+                            f.isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'
+                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void toggleFavorite(f);
+                          }}
+                        >
+                          <Heart
+                            className={
+                              f.isFavorite
+                                ? 'fill-red-500 text-red-500'
+                                : 'fill-transparent text-muted-foreground'
+                            }
+                          />
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEdit(f);
+                          }}
+                          aria-label="Edytuj fiszkę"
+                          title="Edytuj fiszkę"
+                        >
+                          <Pencil />
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openDelete(f);
+                          }}
+                          aria-label="Usuń fiszkę"
+                          title="Usuń fiszkę"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <X />
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="min-w-0">
-                      <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">
+                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
                         {f.back}
                       </p>
-                    </div>
-
-                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full border px-2 py-0.5">
-                          {f.source === 'manually_created' ? 'manual' : 'ai'}
-                        </span>
-                        {f.editedByUser ? (
-                          <span className="rounded-full border px-2 py-0.5">edytowana</span>
-                        ) : null}
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Button variant="outline" onClick={() => openEdit(f)}>
-                          Edytuj
-                        </Button>
-                        <Button variant="destructive" onClick={() => openDelete(f)}>
-                          Usuń
-                        </Button>
-                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -642,6 +737,26 @@ export function TopicClientInner(props: { topicId: string }) {
           </div>
         )}
       </div>
+
+      {/* Modal: podgląd fiszki */}
+      <Dialog
+        open={previewOpen && !!previewTarget}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPreviewOpen(false);
+            setPreviewTarget(null);
+          }
+        }}
+      >
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl md:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="pr-8">{previewTarget?.front ?? ''}</DialogTitle>
+            <DialogDescription className="whitespace-pre-wrap">
+              {previewTarget?.back ?? ''}
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal: opis tematu (niedostępny dla tematu losowego) */}
       {!isRandomTopic ? (
@@ -675,6 +790,7 @@ export function TopicClientInner(props: { topicId: string }) {
                   setDescriptionDraft(e.target.value);
                   if (descriptionStatus !== 'idle') setDescriptionStatus('idle');
                 }}
+                placeholder='Wprowadź swój opis tematu lub kliknij przycisk „Generuj opis”.'
                 disabled={
                   saveDescriptionMutation.isPending ||
                   generateDescriptionMutation.isPending
@@ -905,7 +1021,7 @@ export function TopicClientInner(props: { topicId: string }) {
           if (!open) void closeAiModal();
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl md:max-w-3xl">
           <DialogHeader>
             <DialogTitle>Propozycja AI</DialogTitle>
             <DialogDescription>

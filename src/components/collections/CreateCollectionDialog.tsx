@@ -68,6 +68,7 @@ export const CreateCollectionDialog = React.memo(function CreateCollectionDialog
           <label className="text-sm font-medium" htmlFor="create-collection-name">
             Nazwa
           </label>
+
           <Input
             id="create-collection-name"
             value={name}
@@ -97,6 +98,7 @@ export const CreateCollectionDialog = React.memo(function CreateCollectionDialog
           >
             Anuluj
           </Button>
+          
           <Button type="button" onClick={() => void submit()} disabled={props.isSubmitting}>
             {props.isSubmitting ? 'Tworzenie…' : 'Utwórz'}
           </Button>

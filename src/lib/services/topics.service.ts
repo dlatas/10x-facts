@@ -17,6 +17,8 @@ export class TopicsServiceError extends Error {
 
 const TOPIC_FIELDS =
   'id,name,description,system_key,created_at,updated_at' as const;
+const TOPIC_FIELDS_WITH_COUNTS =
+  'id,name,description,system_key,created_at,updated_at, flashcards:flashcards!flashcards_fk_topic_owner(count)' as const;
 const RANDOM_TOPIC_SYSTEM_KEY = 'random_topic';
 
 export async function getCollectionOr404(args: {
@@ -97,7 +99,7 @@ export async function listTopicsInCollection(
 
   let q = args.supabase
     .from('topics')
-    .select(TOPIC_FIELDS, { count: 'exact' })
+    .select(TOPIC_FIELDS_WITH_COUNTS, { count: 'exact' })
     .eq('user_id', args.userId)
     .eq('collection_id', args.collectionId);
 
@@ -111,8 +113,35 @@ export async function listTopicsInCollection(
 
   if (error) throw error;
 
+  const items: TopicDto[] = (Array.isArray(data) ? data : []).map((row) => {
+    const r = row as unknown as {
+      id: string;
+      name: string;
+      description: string;
+      system_key: string | null;
+      created_at: string;
+      updated_at: string;
+      flashcards?: Array<{ count: number }>;
+    };
+
+    const flashcards_count =
+      Array.isArray(r.flashcards) && typeof r.flashcards?.[0]?.count === 'number'
+        ? r.flashcards[0].count
+        : 0;
+
+    return {
+      id: r.id,
+      name: r.name,
+      description: r.description,
+      system_key: r.system_key,
+      created_at: r.created_at,
+      updated_at: r.updated_at,
+      flashcards_count,
+    };
+  });
+
   return {
-    items: Array.isArray(data) ? (data as TopicDto[]) : [],
+    items,
     total: count ?? 0,
   };
 }

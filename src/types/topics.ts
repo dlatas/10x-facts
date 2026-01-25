@@ -6,7 +6,13 @@ import type { Topic } from '@/types/entities';
 export type TopicDto = Pick<
   Topic,
   'id' | 'name' | 'description' | 'system_key' | 'created_at' | 'updated_at'
->;
+> & {
+  /**
+   * Opcjonalne pole agregujące (np. liczba fiszek w temacie).
+   * Dla części endpointów może nie być zwracane.
+   */
+  flashcards_count?: number;
+};
 
 export interface TopicsListQuery {
   q?: string;

@@ -13,6 +13,8 @@ export class CollectionsServiceError extends Error {
 }
 
 const COLLECTION_FIELDS = 'id,name,system_key,created_at,updated_at' as const;
+const COLLECTION_FIELDS_WITH_COUNTS =
+  'id,name,system_key,created_at,updated_at, topics:topics!topics_fk_collection_owner(count)' as const;
 const RANDOM_SYSTEM_KEY = 'random_collection';
 
 export async function ensureRandomCollectionForUser(args: {
@@ -53,7 +55,7 @@ export async function listCollections(
 
   let q = args.supabase
     .from('collections')
-    .select(COLLECTION_FIELDS, { count: 'exact' })
+    .select(COLLECTION_FIELDS_WITH_COUNTS, { count: 'exact' })
     .eq('user_id', args.userId);
 
   if (args.q) {
@@ -69,8 +71,33 @@ export async function listCollections(
 
   if (error) throw error;
 
+  const items: CollectionDto[] = (Array.isArray(data) ? data : []).map((row) => {
+    const r = row as unknown as {
+      id: string;
+      name: string;
+      system_key: string | null;
+      created_at: string;
+      updated_at: string;
+      topics?: Array<{ count: number }>;
+    };
+
+    const topics_count =
+      Array.isArray(r.topics) && typeof r.topics?.[0]?.count === 'number'
+        ? r.topics[0].count
+        : 0;
+
+    return {
+      id: r.id,
+      name: r.name,
+      system_key: r.system_key,
+      created_at: r.created_at,
+      updated_at: r.updated_at,
+      topics_count,
+    };
+  });
+
   return {
-    items: Array.isArray(data) ? (data as CollectionDto[]) : [],
+    items,
     total: count ?? 0,
   };
 }

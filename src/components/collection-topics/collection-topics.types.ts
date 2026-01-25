@@ -4,6 +4,7 @@ export interface TopicsListItemVm {
   description: string | null;
   systemKey: string | null;
   isSystem: boolean;
+  flashcardsCount: number;
   createdAt: string;
   updatedAt: string;
 }

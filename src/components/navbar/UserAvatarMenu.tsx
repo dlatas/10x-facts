@@ -48,7 +48,7 @@ export function UserAvatarMenu(props: { email?: string | null }) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <a href="/user">User profile</a>
+          <a href="/user">Profil</a>
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={(event) => {
