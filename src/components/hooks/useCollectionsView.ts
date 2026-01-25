@@ -6,6 +6,7 @@ import type {
   CollectionsListQuery,
   CollectionsListResponseDto,
 } from '@/types';
+import { redirectToLogin } from '@/lib/http/redirect';
 import {
   createCollectionsViewService,
   HttpError,
@@ -37,11 +38,6 @@ function mapDtoToVm(dto: CollectionDto): CollectionsListItemVm {
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
   };
-}
-
-function redirectToLogin(): void {
-  if (typeof window === 'undefined') return;
-  window.location.assign('/login');
 }
 
 function readQueryFromUrl(): string {

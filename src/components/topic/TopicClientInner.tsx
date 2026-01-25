@@ -8,6 +8,7 @@ import type {
   FlashcardsListQuery,
   UpdateFlashcardCommand,
 } from '@/types';
+import { redirectToLogin } from '@/lib/http/redirect';
 import { createCollectionTopicsViewService, HttpError as TopicsHttpError } from '@/lib/services/collection-topics-view.service';
 import { createTopicFlashcardsViewService, HttpError as FlashcardsHttpError } from '@/lib/services/topic-flashcards-view.service';
 import { createAiViewService, HttpError as AiHttpError } from '@/lib/services/ai-view.service';
@@ -29,11 +30,6 @@ import { Input } from '@/components/ui/input';
 
 const TOPIC_QUERY_KEY = ['topic'] as const;
 const FLASHCARDS_QUERY_KEY = ['flashcards'] as const;
-
-function redirectToLogin(): void {
-  if (typeof window === 'undefined') return;
-  window.location.assign('/login');
-}
 
 function redirectToCollections(reason?: string): void {
   if (typeof window === 'undefined') return;

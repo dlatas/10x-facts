@@ -1,6 +1,7 @@
 import * as React from 'react';
 
 import type { CollectionDto, FavoriteFlashcardDto } from '@/types';
+import { redirectToLogin } from '@/lib/http/redirect';
 import { createDashboardService } from '@/lib/services/dashboard-service';
 
 export interface DashboardDataState {
@@ -10,11 +11,6 @@ export interface DashboardDataState {
   isCreatingCollection: boolean;
   isUpdatingFavorite: boolean;
   error: string | null;
-}
-
-function redirectToLogin(): void {
-  if (typeof window === 'undefined') return;
-  window.location.assign('/login');
 }
 
 export function useDashboardData(args?: {

@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import type { CollectionDto, TopicDto, FlashcardDto, FavoriteFlashcardDto } from "@/types";
+import { redirectToLogin } from "@/lib/http/redirect";
 import { createCollectionsViewService, HttpError as CollectionsHttpError } from "@/lib/services/collections-view.service";
 import {
   createCollectionTopicsViewService,
@@ -19,11 +20,6 @@ const RANDOM_COLLECTION_SYSTEM_KEY = "random_collection";
 const RANDOM_TOPIC_SYSTEM_KEY = "random_topic";
 const ALL_TOPICS_VALUE = "__all__";
 const ALL_COLLECTIONS_VALUE = "__all_collections__";
-
-function redirectToLogin(): void {
-  if (typeof window === "undefined") return;
-  window.location.assign("/login");
-}
 
 function mapCollectionLabel(dto: CollectionDto): string {
   if (dto.system_key === RANDOM_COLLECTION_SYSTEM_KEY) return "RANDOM";

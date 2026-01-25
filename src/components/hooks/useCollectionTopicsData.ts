@@ -6,6 +6,7 @@ import type {
   TopicsListQuery,
   TopicsListResponseDto,
 } from '@/types';
+import { redirectToLogin } from '@/lib/http/redirect';
 import {
   HttpError,
   createCollectionTopicsViewService,
@@ -43,11 +44,6 @@ export interface UseCollectionTopicsDataResult {
   submitDelete: (
     topic: Pick<TopicDto, 'id' | 'system_key'>
   ) => Promise<{ ok: boolean; errorMessage: string | null }>;
-}
-
-function redirectToLogin(): void {
-  if (typeof window === 'undefined') return;
-  window.location.assign('/login');
 }
 
 function redirectToCollections(reason?: string): void {
