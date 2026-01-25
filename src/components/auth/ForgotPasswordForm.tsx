@@ -10,13 +10,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { isValidEmail } from '@/lib/validation/email';
 import { createAuthService } from '@/lib/services/auth.service';
-
-function isValidEmail(value: string): boolean {
-  const v = value.trim();
-  if (!v) return false;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-}
 
 export function ForgotPasswordForm() {
   const auth = React.useMemo(() => createAuthService(), []);

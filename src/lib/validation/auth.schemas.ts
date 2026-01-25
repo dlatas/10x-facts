@@ -1,11 +1,12 @@
 import { z } from 'zod';
+import { EMAIL_REGEX } from '@/lib/validation/email';
 
 const emailSchema = z
   .string()
   .transform((v) => v.trim())
   .refine((v) => v.length > 0, 'E-mail jest wymagany.')
   .refine(
-    (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+    (v) => EMAIL_REGEX.test(v),
     'Podaj poprawny adres e-mail.'
   );
 

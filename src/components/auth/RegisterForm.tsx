@@ -11,13 +11,8 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { getSafeNextPath } from '@/lib/http/redirect';
+import { isValidEmail } from '@/lib/validation/email';
 import { createAuthService } from '@/lib/services/auth.service';
-
-function isValidEmail(value: string): boolean {
-  const v = value.trim();
-  if (!v) return false;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-}
 
 export function RegisterForm(props: { next?: string | null }) {
   const next = props.next ?? null;
