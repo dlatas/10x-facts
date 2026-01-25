@@ -1,5 +1,6 @@
 import type { Topic } from '@/types';
 import type { SupabaseClient } from '@/db/supabase.client';
+import { clampTrimmed } from '@/lib/utils';
 
 export interface DailyLimit {
   remaining: number;
@@ -254,12 +255,6 @@ export async function insertAiGenerationEvent(args: {
   return { id: data.id };
 }
 
-function clampText(v: string, maxLen: number): string {
-  const trimmed = v.trim();
-  if (trimmed.length <= maxLen) return trimmed;
-  return trimmed.slice(0, maxLen).trim();
-}
-
 function clampTextAtBoundary(
   v: string,
   maxLen: number,
@@ -354,7 +349,7 @@ export async function generateProposalViaOpenRouter(args: {
           'Nie powtarzaj poniższych tematów/pytań (front). Wybierz inny aspekt niż te przykłady:',
           ...args.avoidFronts
             .slice(0, 8)
-            .map((f) => `- ${clampText(String(f ?? ''), 120)}`),
+            .map((f) => `- ${clampTrimmed(String(f ?? ''), 120)}`),
           '',
         ]
       : []),
@@ -414,7 +409,7 @@ export async function generateProposalViaOpenRouter(args: {
     const rawFront = typeof obj?.front === 'string' ? obj.front : '';
     const rawBack = typeof obj?.back === 'string' ? obj.back : '';
 
-    const front = clampText(rawFront, 200);
+    const front = clampTrimmed(rawFront, 200);
     let back = rawBack.trim();
 
     // Jeśli model przegina z długością, zrób automatyczny krok „skróć do ≤600”,
@@ -601,7 +596,7 @@ export async function generateTopicDescriptionViaOpenRouter(args: {
 
     const json = (await res.json()) as OpenRouterChatCompletionResponse;
     const raw = json.choices?.[0]?.message?.content ?? '';
-    const cleaned = clampText(
+    const cleaned = clampTrimmed(
       stripCodeFences(raw).replace(/^["']|["']$/g, ''),
       2000
     );

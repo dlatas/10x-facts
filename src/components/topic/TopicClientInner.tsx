@@ -18,6 +18,7 @@ import { mapFlashcardDtoToVm, mapTopicDtoToVm } from './topic.types';
 import type { FlashcardItemVm, TopicHeaderVm } from './topic.types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { clampTrimmed } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -35,12 +36,6 @@ function redirectToCollections(reason?: string): void {
   if (typeof window === 'undefined') return;
   const url = reason ? `/collections?reason=${encodeURIComponent(reason)}` : '/collections';
   window.location.assign(url);
-}
-
-function clampTrimmed(value: string, maxLen: number): string {
-  const t = value.trim();
-  if (t.length <= maxLen) return t;
-  return t.slice(0, maxLen).trim();
 }
 
 export function TopicClientInner(props: { topicId: string }) {
