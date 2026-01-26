@@ -24,7 +24,6 @@ interface ImportMetaEnv {
    * Używany wyłącznie w backendowych endpointach do operacji wymagających obejścia RLS.
    */
   readonly SUPABASE_SERVICE_ROLE_KEY?: string;
-  readonly PUBLIC_AUTH_API_MOCK?: string;
   readonly OPENROUTER_API_KEY: string;
   readonly OPENROUTER_MODEL?: string;
   readonly AI_DAILY_EVENT_LIMIT?: string;

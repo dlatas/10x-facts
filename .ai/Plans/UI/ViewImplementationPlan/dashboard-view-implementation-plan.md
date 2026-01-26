@@ -112,28 +112,23 @@ Stan będzie zarządzany lokalnie w `DashboardClient` za pomocą `useState` i `u
 
 Można wydzielić custom hook `useDashboardData()`:
 - Zwraca: `{ collections, favorites, isLoading, refreshCollections, refreshFavorites, createCollection }`.
-- Obsługuje logikę mockowania vs real API.
+- Obsługuje pobieranie danych z API.
 
 ## 7. Integracja API
-
-Ze względu na brak gotowego backendu, należy stworzyć warstwę serwisową z obsługą "Mock Mode".
 
 **Plik:** `src/lib/services/dashboard-service.ts`
 
 1.  **Pobranie kolekcji:**
     -   Metoda: `getCollections(limit: number = 6)`
     -   Endpoint: `GET /api/v1/collections`
-    -   Mock: Zwraca tablicę statycznych obiektów `CollectionDto`.
 
 2.  **Pobranie losowych ulubionych:**
     -   Metoda: `getRandomFavorites(limit: number = 6)`
     -   Endpoint: `GET /api/v1/flashcards/favorites/random?limit=6`
-    -   Mock: Zwraca tablicę statycznych obiektów `FavoriteFlashcardDto`.
 
 3.  **Utworzenie kolekcji:**
     -   Metoda: `createCollection(command: CreateCollectionCommand)`
     -   Endpoint: `POST /api/v1/collections`
-    -   Mock: Symuluje opóźnienie i zwraca nowy obiekt `CollectionDto`.
 
 ## 8. Interakcje użytkownika
 
@@ -168,7 +163,7 @@ Ze względu na brak gotowego backendu, należy stworzyć warstwę serwisową z o
 
 1.  **Przygotowanie serwisu:**
     -   Utworzenie `src/lib/services/dashboard-service.ts`.
-    -   Implementacja funkcji `getCollections`, `getRandomFavorites`, `createCollection` z wykorzystaniem `setTimeout` i mock danych zgodnych z `src/types.ts`.
+    -   Implementacja funkcji `getCollections`, `getRandomFavorites`, `createCollection` z wykorzystaniem realnego API.
 2.  **Stworzenie komponentów UI (Dumb Components):**
     -   `FlashcardPreviewCard` (bazując na Shadcn Card).
     -   `FlashcardDetailsDialog` (bazując na Shadcn Dialog).
@@ -184,4 +179,4 @@ Ze względu na brak gotowego backendu, należy stworzyć warstwę serwisową z o
     -   Dopracowanie stanów hover i focus.
 6.  **Weryfikacja:**
     -   Sprawdzenie działania modalu.
-    -   Sprawdzenie dodawania kolekcji (na mockach).
+    -   Sprawdzenie dodawania kolekcji.

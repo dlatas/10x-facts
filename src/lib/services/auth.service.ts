@@ -3,29 +3,12 @@ import { HttpError } from '@/lib/http/http-error';
 
 interface AuthServiceOptions {
   /**
-   * Gdy true – serwis używa mocków zamiast realnych endpointów.
-   * Domyślnie włącza się, jeśli nie ustawiono PUBLIC_AUTH_API_MOCK=false.
-   */
-  mock?: boolean;
-  /**
    * Bazowy URL API – domyślnie internal API w Astro.
    */
   baseUrl?: string;
 }
 
-function getDefaultMockFlag(): boolean {
-  // Domyślnie mock=FALSE, bo backend auth jest dostępny.
-  const v = import.meta.env.PUBLIC_AUTH_API_MOCK;
-  if (typeof v !== 'string' || v.length === 0) return false;
-  return v === 'true';
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
 export function createAuthService(opts?: AuthServiceOptions) {
-  const mock = opts?.mock ?? getDefaultMockFlag();
   const baseUrl = opts?.baseUrl ?? '';
 
   return {
@@ -33,15 +16,6 @@ export function createAuthService(opts?: AuthServiceOptions) {
       const email = command?.email?.trim?.() ?? '';
       const password = command?.password ?? '';
       if (!email || !password) throw new Error('Podaj e-mail i hasło.');
-
-      if (mock) {
-        await sleep(600);
-        // Minimalna symulacja błędu „złe dane”.
-        if (email.toLowerCase().includes('wrong')) {
-          throw new HttpError(401, 'Nieprawidłowy e-mail lub hasło.');
-        }
-        return;
-      }
 
       await fetchJson<unknown>({
         url: `${baseUrl}/api/v1/auth/login`,
@@ -51,11 +25,6 @@ export function createAuthService(opts?: AuthServiceOptions) {
     },
 
     async logout(): Promise<void> {
-      if (mock) {
-        await sleep(200);
-        return;
-      }
-
       await fetchJson<unknown>({
         url: `${baseUrl}/api/v1/auth/logout`,
         method: 'POST',
@@ -69,15 +38,6 @@ export function createAuthService(opts?: AuthServiceOptions) {
       const email = command?.email?.trim?.() ?? '';
       const password = command?.password ?? '';
       if (!email || !password) throw new Error('Podaj e-mail i hasło.');
-
-      if (mock) {
-        await sleep(750);
-        // Minimalna symulacja konfliktu.
-        if (email.toLowerCase().includes('exists')) {
-          throw new HttpError(409, 'Konto z tym adresem e-mail już istnieje.');
-        }
-        return { requiresEmailConfirmation: true };
-      }
 
       const payload = await fetchJson<{
         requiresEmailConfirmation?: boolean;
@@ -95,12 +55,6 @@ export function createAuthService(opts?: AuthServiceOptions) {
       const email = command?.email?.trim?.() ?? '';
       if (!email) throw new Error('Podaj adres e-mail.');
 
-      if (mock) {
-        await sleep(650);
-        // Bezpieczny UX: zawsze „ok”.
-        return;
-      }
-
       await fetchJson<unknown>({
         url: `${baseUrl}/api/v1/auth/password/reset-request`,
         method: 'POST',
@@ -111,11 +65,6 @@ export function createAuthService(opts?: AuthServiceOptions) {
     async updatePassword(command: { password: string }): Promise<void> {
       const password = command?.password ?? '';
       if (!password) throw new Error('Podaj nowe hasło.');
-
-      if (mock) {
-        await sleep(650);
-        return;
-      }
 
       await fetchJson<unknown>({
         url: `${baseUrl}/api/v1/auth/password/update`,

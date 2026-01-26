@@ -10,11 +10,6 @@ import { HttpError } from '@/lib/http/http-error';
 
 interface CollectionsViewServiceOptions {
   /**
-   * Gdy true – serwis używa mocków zamiast realnych endpointów.
-   * Domyślnie włącza się, jeśli ustawiono PUBLIC_COLLECTIONS_API_MOCK=true.
-   */
-  mock?: boolean;
-  /**
    * Bazowy URL API – domyślnie internal API w Astro.
    */
   baseUrl?: string;
@@ -25,17 +20,6 @@ interface CollectionsViewServiceOptions {
 }
 
 export { HttpError };
-
-function getDefaultMockFlag(): boolean {
-  // Domyślnie mock=FALSE, bo endpointy kolekcji są dostępne.
-  const v = import.meta.env.PUBLIC_COLLECTIONS_API_MOCK;
-  if (typeof v !== 'string' || v.length === 0) return false;
-  return v === 'true';
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((r) => setTimeout(r, ms));
-}
 
 function buildCollectionsListUrl(args: {
   baseUrl: string;
@@ -58,68 +42,16 @@ function buildCollectionsListUrl(args: {
   return `${url.pathname}${url.search}`;
 }
 
-function makeMockCollections(now = new Date().toISOString()) {
-  return [
-    {
-      id: 'c_random',
-      name: 'Random',
-      system_key: 'random_collection',
-      created_at: now,
-      updated_at: now,
-    },
-    {
-      id: 'c_1',
-      name: 'React',
-      system_key: null,
-      created_at: now,
-      updated_at: now,
-    },
-    {
-      id: 'c_2',
-      name: 'TypeScript',
-      system_key: null,
-      created_at: now,
-      updated_at: now,
-    },
-    {
-      id: 'c_3',
-      name: 'Astro',
-      system_key: null,
-      created_at: now,
-      updated_at: now,
-    },
-  ];
-}
-
 export function createCollectionsViewService(
   opts?: CollectionsViewServiceOptions
 ) {
-  const mock = opts?.mock ?? getDefaultMockFlag();
   const baseUrl = opts?.baseUrl ?? '';
   const accessToken = opts?.accessToken;
-
-  const mockCollections = makeMockCollections();
 
   return {
     async getCollections(
       query: CollectionsListQuery
     ): Promise<CollectionsListResponseDto> {
-      if (mock) {
-        await sleep(250);
-        const q = (query.q ?? '').trim();
-
-        const filtered = q
-          ? mockCollections.filter((c) =>
-              c.name.toLowerCase().includes(q.toLowerCase())
-            )
-          : mockCollections.slice();
-
-        const offset = Math.max(0, query.offset ?? 0);
-        const limit = Math.max(1, query.limit ?? 50);
-        const items = filtered.slice(offset, offset + limit);
-        return { items, total: filtered.length };
-      }
-
       const url = buildCollectionsListUrl({ baseUrl, query });
       return await fetchJson<CollectionsListResponseDto>({
         url,
@@ -133,29 +65,6 @@ export function createCollectionsViewService(
       const name = command?.name?.trim?.() ?? '';
       if (!name) throw new Error('Nazwa kolekcji nie może być pusta.');
 
-      if (mock) {
-        await sleep(400);
-        if (
-          mockCollections.some(
-            (c) =>
-              c.system_key === null &&
-              c.name.toLowerCase() === name.toLowerCase()
-          )
-        ) {
-          throw new HttpError(409, 'Kolekcja o tej nazwie już istnieje.');
-        }
-        const now = new Date().toISOString();
-        const created = {
-          id: `c_${Date.now()}`,
-          name,
-          system_key: null,
-          created_at: now,
-          updated_at: now,
-        };
-        mockCollections.unshift(created);
-        return created;
-      }
-
       return await fetchJson<CreateCollectionResponseDto>({
         url: `${baseUrl}/api/v1/collections`,
         method: 'POST',
@@ -168,17 +77,6 @@ export function createCollectionsViewService(
       collectionId: string
     ): Promise<DeleteCollectionResponseDto> {
       if (!collectionId) throw new Error('Brak collectionId.');
-
-      if (mock) {
-        await sleep(350);
-        const idx = mockCollections.findIndex((c) => c.id === collectionId);
-        if (idx === -1) throw new HttpError(404, 'Nie znaleziono kolekcji.');
-        if (mockCollections[idx]?.system_key) {
-          throw new HttpError(403, 'Nie można usunąć kolekcji systemowej.');
-        }
-        mockCollections.splice(idx, 1);
-        return { ok: true };
-      }
 
       return await fetchJson<DeleteCollectionResponseDto>({
         url: `${baseUrl}/api/v1/collections/${encodeURIComponent(collectionId)}`,

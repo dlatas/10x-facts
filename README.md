@@ -83,11 +83,6 @@ npm install
 
 > Note: `.env.example` is the source of truth for required variables.
 
-Dashboard note:
-
-- To use **real dashboard API calls** (collections + random favorite flashcards), set `PUBLIC_DASHBOARD_API_MOCK=false` in your `.env`.
-  - If it's missing, the UI defaults to **mock data** to allow development without a working backend.
-
 3. Start the dev server:
 
 ```bash

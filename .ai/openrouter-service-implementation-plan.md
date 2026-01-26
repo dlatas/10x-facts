@@ -12,7 +12,7 @@ Główne cele:
 #### Kluczowe komponenty usługi (i ich cel)
 
 1. **Konfiguracja i iniekcja zależności**
-   - Cel: kontrola hosta, kluczy, nagłówków i timeoutów; łatwe testowanie (mock transportu).
+   - Cel: kontrola hosta, kluczy, nagłówków i timeoutów; łatwe testowanie (np. przez podmianę transportu).
 2. **Budowanie żądania Chat Completions**
    - Cel: składanie wiadomości (system/user), wybór modelu, parametrów, oraz `response_format`.
 3. **Warstwa transportowa HTTP**
@@ -33,7 +33,7 @@ Rekomendowana lokalizacja: `src/lib/services/openrouter-service.ts`
 Konstruktor powinien przyjmować konfigurowalne zależności, aby:
 
 - nie uzależniać się od globalnych `process.env` w testach,
-- ułatwić podmianę transportu (mock/fake),
+- ułatwić podmianę transportu (np. implementacja testowa),
 - centralnie kontrolować politykę timeout/retry.
 
 #### Proponowany kontrakt konstruktora (TypeScript)
@@ -421,7 +421,7 @@ Zasada implementacyjna:
   - scalania parametrów,
   - parsowania odpowiedzi,
   - `response_format` (schematy) – testy kontraktowe na przykładowych payloadach.
-- Dodaj testy integracyjne (opcjonalnie) na endpointach API z mock transportu.
+- Dodaj testy integracyjne (opcjonalnie) na endpointach API z podmienioną implementacją transportu.
 
 #### Krok 8: Observability i koszty
 

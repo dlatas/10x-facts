@@ -402,7 +402,7 @@ W dostarczonych zasobach DB **brak dedykowanej tabeli do logowania błędów** d
    - Sukces: `json(dto, { status })`,
    - Błędy: `jsonError(status, message, { issues })` dla walidacji.
 5. **Spiąć z istniejącym klientem dashboard**:
-   - endpoint `/api/v1/flashcards/favorites/random` jest już konsumowany przez `src/lib/services/dashboard-service.ts` — po wdrożeniu wyłączyć mocki przez `PUBLIC_DASHBOARD_API_MOCK=false` i upewnić się, że middleware przekazuje Bearer token do `context.locals.supabase`.
+   - endpoint `/api/v1/flashcards/favorites/random` jest już konsumowany przez `src/lib/services/dashboard-service.ts` — upewnić się, że middleware przekazuje Bearer token do `context.locals.supabase`.
 6. **Opcjonalnie (rekomendowane) dodać RPC dla losowych ulubionych**:
    - dodać migrację z funkcją `get_random_favorite_flashcards(p_limit int)` i grantem execute dla `authenticated`,
    - w service używać `supabase.rpc(...)` zamiast losowania w pamięci.

@@ -287,9 +287,6 @@ Aby zachować spójność z istniejącym `createDashboardService` (`src/lib/serv
   - własny `HttpError` z `status` (tak jak w dashboard-service),
   - mapowanie `409` → komunikat „Nazwa zajęta” (inline),
   - `401` → inicjowanie globalnego redirectu (patrz sekcja 10).
-- (Opcjonalnie) tryb mock:
-  - flaga `PUBLIC_COLLECTIONS_API_MOCK` analogicznie do `PUBLIC_DASHBOARD_API_MOCK`,
-  - mock musi uwzględniać systemową kolekcję `system_key='random_collection'`.
 
 ## 8. Interakcje użytkownika
 
@@ -381,7 +378,6 @@ Aby zachować spójność z istniejącym `createDashboardService` (`src/lib/serv
    - Dodaj `src/lib/services/collections-view.service.ts` wzorując się na `src/lib/services/dashboard-service.ts`:
      - `fetchJson` + `HttpError`,
      - metody: list/create/delete,
-     - (opcjonalnie) mock mode z env `PUBLIC_COLLECTIONS_API_MOCK`.
 
 3. **Hook widoku**
    - Dodaj `src/components/hooks/useCollectionsView.ts`:
