@@ -79,9 +79,23 @@ npm install
 2. Create your environment file:
 
 - Copy `.env.example` to `.env`
-- Fill in required credentials (typically Supabase and OpenRouter)
+- Fill in required credentials (Supabase + OpenRouter)
 
 > Note: `.env.example` is the source of truth for required variables.
+
+#### Environment variables
+
+This project requires **your own** credentials. Do **not** commit `.env` (it is ignored by git).
+
+- **Supabase**
+  - `SUPABASE_URL`: Supabase project URL (or local Supabase URL if you use Supabase CLI)
+  - `SUPABASE_KEY`: Supabase **anon** key (public) used by the app
+  - Optional: `SUPABASE_SERVICE_ROLE_KEY` (server-only) — only needed for endpoints that must bypass RLS
+
+- **AI (OpenRouter)**
+  - `OPENROUTER_API_KEY`: your OpenRouter API key (server-side only; required for AI generation)
+  - Optional: `OPENROUTER_MODEL`: overrides default model used by the backend (see `.env.example`)
+  - Optional: `AI_DAILY_EVENT_LIMIT`: daily per-user generation limit (string/number)
 
 3. Start the dev server:
 
