@@ -58,6 +58,7 @@ export function ForgotPasswordForm() {
     <Card>
       <CardHeader>
         <CardTitle>Odzyskiwanie hasła</CardTitle>
+        
         <CardDescription>
           Wyślemy link do zresetowania hasła. Ze względów bezpieczeństwa
           komunikat jest taki sam niezależnie od tego, czy konto istnieje.

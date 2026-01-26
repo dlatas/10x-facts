@@ -11,7 +11,9 @@ import type {
   FlashcardsListQuery,
   UpdateFlashcardCommand,
 } from '@/types';
+import { fetchJson } from '@/lib/http/fetch-json';
 import { redirectToLogin } from '@/lib/http/redirect';
+import { HttpError } from '@/lib/http/http-error';
 import { createCollectionTopicsViewService, HttpError as TopicsHttpError } from '@/lib/services/collection-topics-view.service';
 import { createTopicFlashcardsViewService, HttpError as FlashcardsHttpError } from '@/lib/services/topic-flashcards-view.service';
 import { createAiViewService, HttpError as AiHttpError } from '@/lib/services/ai-view.service';
@@ -23,14 +25,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { clampTrimmed } from '@/lib/utils';
 import { createFlashcardCommandSchema } from '@/lib/validation/flashcards.schemas';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { updateTopicDescriptionCommandSchema } from '@/lib/validation/topics.schemas';
+import { FlashcardPreviewDialog } from '@/components/topic/modals/FlashcardPreviewDialog';
+import { DeleteFlashcardConfirmDialog } from '@/components/topic/modals/DeleteFlashcardConfirmDialog';
+import { TopicDescriptionDialog } from '@/components/topic/modals/TopicDescriptionDialog';
+import { CreateFlashcardDialog } from '@/components/topic/modals/CreateFlashcardDialog';
+import { EditFlashcardDialog } from '@/components/topic/modals/EditFlashcardDialog';
+import { AiProposalDialog } from '@/components/topic/modals/AiProposalDialog';
 import { Input } from '@/components/ui/input';
 
 const TOPIC_QUERY_KEY = ['topic'] as const;
@@ -52,10 +53,13 @@ export function TopicClientInner(props: { topicId: string }) {
   const aiService = React.useMemo(() => createAiViewService(), []);
 
   const [descriptionOpen, setDescriptionOpen] = React.useState(false);
-  const [descriptionDraft, setDescriptionDraft] = React.useState('');
   const [descriptionStatus, setDescriptionStatus] = React.useState<
     'idle' | 'saving' | 'saved' | 'error'
   >('idle');
+  const descriptionForm = useForm<z.infer<typeof updateTopicDescriptionCommandSchema>>({
+    resolver: zodResolver(updateTopicDescriptionCommandSchema),
+    defaultValues: { description: '' },
+  });
 
   const [createOpen, setCreateOpen] = React.useState(false);
   const createForm = useForm<z.infer<typeof createFlashcardCommandSchema>>({
@@ -134,8 +138,10 @@ export function TopicClientInner(props: { topicId: string }) {
     // legacy fallback: kiedyś DB miało default "example description."
     const cleaned =
       raw.trim().toLowerCase() === 'example description.' ? '' : raw;
-    setDescriptionDraft(cleaned);
-  }, [topicQuery.data]);
+    descriptionForm.reset({ description: cleaned });
+    descriptionForm.clearErrors();
+    if (descriptionStatus !== 'idle') setDescriptionStatus('idle');
+  }, [descriptionForm, descriptionStatus, topicQuery.data]);
 
   const flashcardsQuery = useQuery({
     queryKey: [
@@ -165,17 +171,12 @@ export function TopicClientInner(props: { topicId: string }) {
 
   const saveDescriptionMutation = useMutation({
     mutationFn: async () => {
-      // PATCH /api/v1/topics/:topicId
-      const res = await fetch(`/api/v1/topics/${encodeURIComponent(props.topicId)}`, {
+      const description = descriptionForm.getValues('description');
+      await fetchJson<unknown>({
+        url: `/api/v1/topics/${encodeURIComponent(props.topicId)}`,
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: descriptionDraft }),
+        body: { description },
       });
-      if (res.ok) return;
-      const text = await res.text().catch(() => '');
-      if (res.status === 401) throw new Error('Brak autoryzacji (401).');
-      if (res.status === 404) throw new Error('Nie znaleziono tematu.');
-      throw new Error(text || `Błąd API (${res.status}).`);
     },
     onMutate: () => {
       setDescriptionStatus('saving');
@@ -187,8 +188,20 @@ export function TopicClientInner(props: { topicId: string }) {
       void queryClient.invalidateQueries({ queryKey: TOPIC_QUERY_KEY });
     },
     onError: (e) => {
-      const msg = e instanceof Error ? e.message : 'Nie udało się zapisać opisu.';
+      if (e instanceof HttpError) {
+        if (e.status === 401) return redirectToLogin();
+        if (e.status === 404) return redirectToCollections('topic_not_found');
+        const msg = e.message || 'Nie udało się zapisać opisu.';
+        setDescriptionStatus('error');
+        descriptionForm.setError('root', { message: msg });
+        toast.error(msg);
+        return;
+      }
+
+      const msg =
+        e instanceof Error ? e.message : 'Nie udało się zapisać opisu.';
       setDescriptionStatus('error');
+      descriptionForm.setError('root', { message: msg });
       toast.error(msg);
     },
   });
@@ -198,7 +211,10 @@ export function TopicClientInner(props: { topicId: string }) {
       return await aiService.generateTopicDescription({ topic_id: props.topicId });
     },
     onSuccess: (res) => {
-      setDescriptionDraft(res.description ?? '');
+      descriptionForm.setValue('description', res.description ?? '', {
+        shouldDirty: true,
+      });
+      descriptionForm.clearErrors();
       if (descriptionStatus !== 'idle') setDescriptionStatus('idle');
       toast.success('Wygenerowano opis tematu. Możesz go jeszcze edytować i zapisać.');
     },
@@ -742,28 +758,18 @@ export function TopicClientInner(props: { topicId: string }) {
       </div>
 
       {/* Modal: podgląd fiszki */}
-      <Dialog
+      <FlashcardPreviewDialog
         open={previewOpen && !!previewTarget}
-        onOpenChange={(open) => {
-          if (!open) {
-            setPreviewOpen(false);
-            setPreviewTarget(null);
-          }
+        flashcard={previewTarget ? { front: previewTarget.front, back: previewTarget.back } : null}
+        onClose={() => {
+          setPreviewOpen(false);
+          setPreviewTarget(null);
         }}
-      >
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl md:max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="pr-8">{previewTarget?.front ?? ''}</DialogTitle>
-            <DialogDescription className="whitespace-pre-wrap">
-              {previewTarget?.back ?? ''}
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+      />
 
       {/* Modal: opis tematu (niedostępny dla tematu losowego) */}
       {!isRandomTopic ? (
-        <Dialog
+        <TopicDescriptionDialog
           open={descriptionOpen}
           onOpenChange={(open) => {
             if (
@@ -773,372 +779,65 @@ export function TopicClientInner(props: { topicId: string }) {
               return;
             setDescriptionOpen(open);
           }}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Opis tematu</DialogTitle>
-              <DialogDescription>
-                Opis wpływa na jakość generowania AI. Zapis jest manualny.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium" htmlFor="topic-description">
-                Opis
-              </label>
-              <textarea
-                id="topic-description"
-                value={descriptionDraft}
-                onChange={(e) => {
-                  setDescriptionDraft(e.target.value);
-                  if (descriptionStatus !== 'idle') setDescriptionStatus('idle');
-                }}
-                placeholder='Wprowadź swój opis tematu lub kliknij przycisk „Generuj opis”.'
-                disabled={
-                  saveDescriptionMutation.isPending ||
-                  generateDescriptionMutation.isPending
-                }
-                className="min-h-36 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50"
-              />
-              {descriptionDraft.trim().length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Wskazówka: pusty opis może obniżyć jakość propozycji AI.
-                </p>
-              ) : null}
-              {descriptionStatus === 'saved' ? (
-                <p className="text-sm text-muted-foreground">Zapisano.</p>
-              ) : descriptionStatus === 'error' ? (
-                <p className="text-sm text-destructive">Nie udało się zapisać.</p>
-              ) : null}
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setDescriptionOpen(false)}
-                disabled={
-                  saveDescriptionMutation.isPending ||
-                  generateDescriptionMutation.isPending
-                }
-              >
-                Zamknij
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => void generateDescriptionMutation.mutateAsync()}
-                disabled={
-                  saveDescriptionMutation.isPending ||
-                  generateDescriptionMutation.isPending
-                }
-              >
-                {generateDescriptionMutation.isPending
-                  ? 'Generowanie…'
-                  : 'Generuj opis'}
-              </Button>
-              <Button
-                type="button"
-                onClick={() => void saveDescriptionMutation.mutateAsync()}
-                disabled={
-                  saveDescriptionMutation.isPending ||
-                  generateDescriptionMutation.isPending
-                }
-              >
-                {saveDescriptionMutation.isPending ? 'Zapisywanie…' : 'Zapisz'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          form={descriptionForm}
+          status={descriptionStatus}
+          setStatus={setDescriptionStatus}
+          isSaving={saveDescriptionMutation.isPending}
+          isGenerating={generateDescriptionMutation.isPending}
+          onGenerate={() => void generateDescriptionMutation.mutateAsync()}
+          onSave={() => void saveDescriptionMutation.mutateAsync()}
+        />
       ) : null}
 
       {/* Modal: dodaj fiszkę */}
-      <Dialog
+      <CreateFlashcardDialog
         open={createOpen}
         onOpenChange={(open) => {
           if (createFlashcardMutation.isPending) return;
           setCreateOpen(open);
         }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Dodaj fiszkę</DialogTitle>
-            <DialogDescription>Tworzenie manualne. Front ≤ 200, back ≤ 600.</DialogDescription>
-          </DialogHeader>
-
-          <form
-            className="space-y-3"
-            onSubmit={(e) => void submitCreate(e)}
-            noValidate
-          >
-            <div className="space-y-2">
-              <label className="text-sm font-medium" htmlFor="create-front">
-                Front
-              </label>
-              <Input
-                id="create-front"
-                disabled={createFlashcardMutation.isPending}
-                aria-invalid={Boolean(createForm.formState.errors.front) || undefined}
-                aria-describedby={
-                  createForm.formState.errors.front ? 'create-front-error' : undefined
-                }
-                {...createForm.register('front')}
-              />
-              {createForm.formState.errors.front?.message ? (
-                <p id="create-front-error" className="text-sm text-destructive">
-                  {createForm.formState.errors.front.message}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium" htmlFor="create-back">
-                Back
-              </label>
-              <textarea
-                id="create-back"
-                disabled={createFlashcardMutation.isPending}
-                className="min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50"
-                aria-invalid={Boolean(createForm.formState.errors.back) || undefined}
-                aria-describedby={
-                  createForm.formState.errors.back ? 'create-back-error' : undefined
-                }
-                {...createForm.register('back')}
-              />
-              {createForm.formState.errors.back?.message ? (
-                <p id="create-back-error" className="text-sm text-destructive">
-                  {createForm.formState.errors.back.message}
-                </p>
-              ) : null}
-            </div>
-
-            {createForm.formState.errors.root?.message ? (
-              <p className="text-sm text-destructive">
-                {createForm.formState.errors.root.message}
-              </p>
-            ) : null}
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setCreateOpen(false)}
-                disabled={createFlashcardMutation.isPending}
-              >
-                Anuluj
-              </Button>
-              <Button
-                type="submit"
-                disabled={createFlashcardMutation.isPending}
-              >
-                {createFlashcardMutation.isPending ? 'Dodawanie…' : 'Dodaj'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+        form={createForm}
+        isPending={createFlashcardMutation.isPending}
+        onSubmit={(e) => void submitCreate(e)}
+      />
 
       {/* Modal: edytuj fiszkę */}
-      <Dialog
+      <EditFlashcardDialog
         open={editOpen}
         onOpenChange={(open) => {
           if (updateFlashcardMutation.isPending) return;
           setEditOpen(open);
         }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edytuj fiszkę</DialogTitle>
-            <DialogDescription>Źródło jest tylko do odczytu.</DialogDescription>
-          </DialogHeader>
-
-          <form
-            className="space-y-3"
-            onSubmit={(e) => void submitEdit(e)}
-            noValidate
-          >
-            <div className="space-y-2">
-              <label className="text-sm font-medium" htmlFor="edit-front">
-                Front
-              </label>
-              <Input
-                id="edit-front"
-                disabled={updateFlashcardMutation.isPending}
-                aria-invalid={Boolean(editForm.formState.errors.front) || undefined}
-                aria-describedby={
-                  editForm.formState.errors.front ? 'edit-front-error' : undefined
-                }
-                {...editForm.register('front')}
-              />
-              {editForm.formState.errors.front?.message ? (
-                <p id="edit-front-error" className="text-sm text-destructive">
-                  {editForm.formState.errors.front.message}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium" htmlFor="edit-back">
-                Back
-              </label>
-              <textarea
-                id="edit-back"
-                disabled={updateFlashcardMutation.isPending}
-                className="min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50"
-                aria-invalid={Boolean(editForm.formState.errors.back) || undefined}
-                aria-describedby={
-                  editForm.formState.errors.back ? 'edit-back-error' : undefined
-                }
-                {...editForm.register('back')}
-              />
-              {editForm.formState.errors.back?.message ? (
-                <p id="edit-back-error" className="text-sm text-destructive">
-                  {editForm.formState.errors.back.message}
-                </p>
-              ) : null}
-            </div>
-
-            {editTarget ? (
-              <p className="text-xs text-muted-foreground">
-                Źródło: {editTarget.source === 'manually_created' ? 'manualne' : 'AI'}
-              </p>
-            ) : null}
-
-            {editForm.formState.errors.root?.message ? (
-              <p className="text-sm text-destructive">
-                {editForm.formState.errors.root.message}
-              </p>
-            ) : null}
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setEditOpen(false)}
-                disabled={updateFlashcardMutation.isPending}
-              >
-                Anuluj
-              </Button>
-              <Button
-                type="submit"
-                disabled={updateFlashcardMutation.isPending}
-              >
-                {updateFlashcardMutation.isPending ? 'Zapisywanie…' : 'Zapisz'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+        form={editForm}
+        isPending={updateFlashcardMutation.isPending}
+        sourceLabel={
+          editTarget ? (editTarget.source === 'manually_created' ? 'manualne' : 'AI') : null
+        }
+        onSubmit={(e) => void submitEdit(e)}
+      />
 
       {/* Confirm: usuń fiszkę */}
-      <Dialog
+      <DeleteFlashcardConfirmDialog
         open={deleteOpen}
-        onOpenChange={(open) => {
-          if (deleteFlashcardMutation.isPending) return;
-          setDeleteOpen(open);
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Usunąć fiszkę?</DialogTitle>
-            <DialogDescription>Ta operacja jest nieodwracalna.</DialogDescription>
-          </DialogHeader>
-          <div className="rounded-md border bg-muted/30 p-3 text-sm">
-            <p className="text-muted-foreground">Front:</p>
-            <p className="font-medium">{deleteTarget?.front ?? '—'}</p>
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDeleteOpen(false)}
-              disabled={deleteFlashcardMutation.isPending}
-            >
-              Anuluj
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => void confirmDelete()}
-              disabled={deleteFlashcardMutation.isPending}
-            >
-              {deleteFlashcardMutation.isPending ? 'Usuwanie…' : 'Usuń'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        flashcardFront={deleteTarget?.front ?? null}
+        isDeleting={deleteFlashcardMutation.isPending}
+        onOpenChange={setDeleteOpen}
+        onConfirm={() => void confirmDelete()}
+      />
 
       {/* Modal: AI preview */}
-      <Dialog
+      <AiProposalDialog
         open={aiOpen}
-        onOpenChange={(open) => {
-          if (!open) void closeAiModal();
-        }}
-      >
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl md:max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Propozycja AI</DialogTitle>
-            <DialogDescription>
-              {aiLimit ? (
-                <span>
-                  Pozostałe decyzje: <strong>{aiLimit.remaining}</strong> (reset:{' '}
-                  {aiLimit.reset_at_utc})
-                </span>
-              ) : (
-                'Zapisz albo odrzuć propozycję.'
-              )}
-            </DialogDescription>
-          </DialogHeader>
-
-          {aiProposal ? (
-            <div className="space-y-3">
-              <div className="rounded-md border p-3">
-                <p className="text-xs text-muted-foreground">Front</p>
-                <p className="mt-1 font-medium">{aiProposal.front}</p>
-              </div>
-              <div className="rounded-md border p-3">
-                <p className="text-xs text-muted-foreground">Back</p>
-                <p className="mt-1 text-sm">{aiProposal.back}</p>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">Brak danych propozycji.</p>
-          )}
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void closeAiModal()}
-              disabled={aiAcceptMutation.isPending || aiRejectMutation.isPending}
-            >
-              Zamknij
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => void aiRejectMutation.mutateAsync()}
-              disabled={!aiProposal || aiAcceptMutation.isPending || aiRejectMutation.isPending}
-            >
-              {aiRejectMutation.isPending ? 'Odrzucanie…' : 'Odrzuć'}
-            </Button>
-            <Button
-              type="button"
-              onClick={() =>
-                aiProposal
-                  ? void aiAcceptMutation.mutateAsync({
-                      front: aiProposal.front,
-                      back: aiProposal.back,
-                    })
-                  : undefined
-              }
-              disabled={!aiProposal || aiAcceptMutation.isPending || aiRejectMutation.isPending}
-            >
-              {aiAcceptMutation.isPending ? 'Zapisywanie…' : 'Zapisz'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        proposal={aiProposal}
+        limit={aiLimit}
+        isAccepting={aiAcceptMutation.isPending}
+        isRejecting={aiRejectMutation.isPending}
+        onClose={() => void closeAiModal()}
+        onReject={() => void aiRejectMutation.mutateAsync()}
+        onAccept={(proposal) =>
+          void aiAcceptMutation.mutateAsync({ front: proposal.front, back: proposal.back })
+        }
+      />
     </main>
   );
 }
