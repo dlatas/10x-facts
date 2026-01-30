@@ -378,8 +378,8 @@ export async function generateProposalViaOpenRouter(args: {
     if (!res.ok) {
       const text = await res.text().catch(() => '');
       throw makeHttpStatusError(
-        `OpenRouter error: ${res.status} ${res.statusText}${text ? `; body=${text}` : ''}`
-        ,res.status
+        `OpenRouter error: ${res.status} ${res.statusText}${text ? `; body=${text}` : ''}`,
+        res.status
       );
     }
 
@@ -407,7 +407,7 @@ export async function generateProposalViaOpenRouter(args: {
           timeoutMs: Math.min(12_000, timeoutMs),
         });
       } catch {
-        // Jeśli skracanie się nie uda, używamy oryginalnego tekstu
+        console.error('Failed to shorten back via OpenRouter');
       }
     }
 
@@ -570,8 +570,8 @@ export async function generateTopicDescriptionViaOpenRouter(args: {
     if (!res.ok) {
       const text = await res.text().catch(() => '');
       throw makeHttpStatusError(
-        `OpenRouter error: ${res.status} ${res.statusText}${text ? `; body=${text}` : ''}`
-        ,res.status
+        `OpenRouter error: ${res.status} ${res.statusText}${text ? `; body=${text}` : ''}`,
+        res.status
       );
     }
 
