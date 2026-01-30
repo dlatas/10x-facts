@@ -7,8 +7,8 @@ on:
     branches: [master, main]
 
 jobs:
-  ci:
-    name: Continuous Integration
+  lint:
+    name: Lint & Format Check
     runs-on: ubuntu-latest
 
     steps:
@@ -30,8 +30,42 @@ jobs:
       - name: Check code formatting
         run: npm run format -- --check
 
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Run unit tests
         run: npm run test:unit
+
+  build:
+    name: Production Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build production
         run: npm run build
