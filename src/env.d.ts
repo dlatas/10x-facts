@@ -17,12 +17,8 @@ declare global {
 }
 
 interface ImportMetaEnv {
-  readonly SUPABASE_URL: string;
-  readonly SUPABASE_KEY: string;
-  readonly SUPABASE_SERVICE_ROLE_KEY?: string;
-  readonly OPENROUTER_API_KEY: string;
-  readonly OPENROUTER_MODEL?: string;
-  readonly AI_DAILY_EVENT_LIMIT?: string;
+  // Note: this project uses Astro's `astro:env/*` for app configuration.
+  // Keep this interface minimal; Astro provides default env typings out of the box.
 }
 
 interface ImportMeta {

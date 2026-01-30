@@ -1,4 +1,5 @@
 import type { APIContext } from 'astro';
+import { AI_DAILY_EVENT_LIMIT } from 'astro:env/server';
 
 import { aiRejectCommandSchema } from '@/lib/validation/ai-generation.schemas';
 import {
@@ -50,11 +51,7 @@ export async function POST(context: APIContext): Promise<Response> {
   const isRandom = getIsRandomTopic(topic);
 
   // 4) Daily limit (hard enforcement on decision endpoints)
-  const dailyLimitRaw = import.meta.env.AI_DAILY_EVENT_LIMIT;
-  const dailyEventLimit = Math.max(
-    1,
-    Number.parseInt(dailyLimitRaw ?? '5', 10) || 5
-  );
+  const dailyEventLimit = Math.max(1, AI_DAILY_EVENT_LIMIT);
 
   let limit;
   try {

@@ -1,4 +1,5 @@
 import type { APIContext } from 'astro';
+import { OPENROUTER_MODEL, getSecret } from 'astro:env/server';
 
 import { aiGenerateTopicDescriptionCommandSchema } from '@/lib/validation/ai-generation.schemas';
 import { json, jsonError, readJsonBody, requireUserId } from '@/lib/http/api';
@@ -44,10 +45,10 @@ export async function POST(context: APIContext): Promise<Response> {
   }
 
   // 4) Call OpenRouter
-  const apiKey = import.meta.env.OPENROUTER_API_KEY;
+  const apiKey = getSecret('OPENROUTER_API_KEY');
   if (!apiKey) return jsonError(500, 'Brak konfiguracji OPENROUTER_API_KEY.');
 
-  const model = import.meta.env.OPENROUTER_MODEL ?? 'openai/gpt-4o-mini';
+  const model = OPENROUTER_MODEL;
 
   try {
     const generated = await generateTopicDescriptionViaOpenRouter({
@@ -71,4 +72,3 @@ export async function POST(context: APIContext): Promise<Response> {
     );
   }
 }
-

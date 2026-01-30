@@ -1,4 +1,9 @@
 import type { APIContext } from 'astro';
+import {
+  AI_DAILY_EVENT_LIMIT,
+  OPENROUTER_MODEL,
+  getSecret,
+} from 'astro:env/server';
 
 import { aiGenerateCommandSchema } from '@/lib/validation/ai-generation.schemas';
 import {
@@ -71,11 +76,7 @@ export async function POST(context: APIContext): Promise<Response> {
           );
 
   // 4) Daily limit (counts events accepted/rejected/skipped)
-  const dailyLimitRaw = import.meta.env.AI_DAILY_EVENT_LIMIT;
-  const dailyEventLimit = Math.max(
-    1,
-    Number.parseInt(dailyLimitRaw ?? '5', 10) || 5
-  );
+  const dailyEventLimit = Math.max(1, AI_DAILY_EVENT_LIMIT);
 
   let limit;
   try {
@@ -91,10 +92,10 @@ export async function POST(context: APIContext): Promise<Response> {
   }
 
   // 5) Call OpenRouter
-  const apiKey = import.meta.env.OPENROUTER_API_KEY;
+  const apiKey = getSecret('OPENROUTER_API_KEY');
   if (!apiKey) return jsonError(500, 'Brak konfiguracji OPENROUTER_API_KEY.');
 
-  const model = import.meta.env.OPENROUTER_MODEL ?? 'openai/gpt-4o-mini';
+  const model = OPENROUTER_MODEL;
 
   try {
     // Best-effort retries to avoid repeating the same "front" for a topic.

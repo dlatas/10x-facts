@@ -1,4 +1,5 @@
 import type { APIContext } from 'astro';
+import { SUPABASE_URL, getSecret } from 'astro:env/server';
 
 import { json, jsonError, requireUserId } from '@/lib/http/api';
 
@@ -16,13 +17,12 @@ export async function GET(context: APIContext): Promise<Response> {
   const auth = await requireUserId(context);
   if (!auth.ok) return auth.response;
 
-  const supabaseUrl = import.meta.env.SUPABASE_URL;
-  const hasServiceRoleKey = Boolean(import.meta.env.SUPABASE_SERVICE_ROLE_KEY);
+  const hasServiceRoleKey = Boolean(getSecret('SUPABASE_SERVICE_ROLE_KEY'));
 
   return json({
     ok: true,
     env: {
-      SUPABASE_URL: supabaseUrl,
+      SUPABASE_URL,
       // nie ujawniamy klucza – tylko informację czy jest ustawiony
       SUPABASE_SERVICE_ROLE_KEY_SET: hasServiceRoleKey,
     },
