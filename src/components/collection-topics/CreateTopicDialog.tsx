@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { memo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
@@ -19,7 +19,7 @@ import { createTopicCommandSchema } from '@/lib/validation/topics.schemas';
 
 const createTopicNameSchema = createTopicCommandSchema.pick({ name: true });
 
-export const CreateTopicDialog = React.memo(function CreateTopicDialog(
+export const CreateTopicDialog = memo(function CreateTopicDialog(
   props: CreateTopicDialogProps
 ) {
   const form = useForm<z.infer<typeof createTopicNameSchema>>({
@@ -27,7 +27,7 @@ export const CreateTopicDialog = React.memo(function CreateTopicDialog(
     defaultValues: { name: '' },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (props.open) return;
     form.reset({ name: '' });
     form.clearErrors();

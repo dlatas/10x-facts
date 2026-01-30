@@ -1,4 +1,4 @@
-import * as React from "react";
+import { memo, useCallback, useMemo } from "react";
 import { Heart } from "lucide-react";
 
 import type { FavoriteFlashcardDto } from "@/types";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-export const FlashcardPreviewCard = React.memo(function FlashcardPreviewCard(props: {
+export const FlashcardPreviewCard = memo(function FlashcardPreviewCard(props: {
   flashcard: FavoriteFlashcardDto;
   onClick?: (flashcard: FavoriteFlashcardDto) => void;
   onToggleFavorite?: (flashcard: FavoriteFlashcardDto) => void;
@@ -15,11 +15,11 @@ export const FlashcardPreviewCard = React.memo(function FlashcardPreviewCard(pro
 }) {
   const { flashcard, onClick } = props;
 
-  const handleClick = React.useCallback(() => {
+  const handleClick = useCallback(() => {
     onClick?.(flashcard);
   }, [flashcard, onClick]);
 
-  const backPreview = React.useMemo(() => {
+  const backPreview = useMemo(() => {
     const words = (flashcard.back ?? "")
       .trim()
       .split(/\s+/)

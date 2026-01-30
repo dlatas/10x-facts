@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
@@ -17,16 +17,16 @@ import { createAuthService } from '@/lib/services/auth.service';
 import { authForgotPasswordCommandSchema } from '@/lib/validation/auth.schemas';
 
 export function ForgotPasswordForm() {
-  const auth = React.useMemo(() => createAuthService(), []);
+  const auth = useMemo(() => createAuthService(), []);
 
-  const emailId = React.useId();
-  const [sent, setSent] = React.useState(false);
+  const emailId = useId();
+  const [sent, setSent] = useState(false);
   const form = useForm<z.infer<typeof authForgotPasswordCommandSchema>>({
     resolver: zodResolver(authForgotPasswordCommandSchema),
     defaultValues: { email: '' },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     const t = window.setTimeout(() => form.setFocus('email'), 0);
     return () => window.clearTimeout(t);
   }, [form]);

@@ -1,7 +1,7 @@
-import * as React from 'react';
+import { memo } from 'react';
 import { Toaster as Sonner } from 'sonner';
 
-export const Toaster = React.memo(function Toaster() {
+export const Toaster = memo(function Toaster() {
   return (
     <Sonner
       position="top-right"

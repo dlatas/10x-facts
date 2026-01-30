@@ -22,8 +22,15 @@ interface OpenRouterChatCompletionResponse {
   };
 }
 
+type HttpStatusError = Error & { httpStatus: number };
+
+function makeHttpStatusError(message: string, status: number): HttpStatusError {
+  const err = new Error(message) as HttpStatusError;
+  err.httpStatus = status;
+  return err;
+}
+
 export function toUtcDayString(dateUtc: Date): string {
-  // YYYY-MM-DD in UTC
   return dateUtc.toISOString().slice(0, 10);
 }
 
@@ -71,17 +78,8 @@ export function getIsRandomTopic(topic: Pick<Topic, 'system_key'>): boolean {
 }
 
 export interface RandomTopicDomain {
-  /**
-   * Telemetry label: a-z0-9_- (max 64)
-   */
   label: string;
-  /**
-   * Human-friendly title used in the prompt.
-   */
   title: string;
-  /**
-   * Description used in the prompt.
-   */
   description: string;
 }
 
@@ -266,24 +264,20 @@ function clampTextAtBoundary(
   const candidate = trimmed.slice(0, maxLen).trimEnd();
   if (!candidate) return '';
 
-  // Prefer kończenie na granicy zdania, żeby nie ucinać w połowie.
   if (opts?.preferSentenceEnd) {
     const lastSentenceEnd = Math.max(
       candidate.lastIndexOf('.'),
       candidate.lastIndexOf('!'),
       candidate.lastIndexOf('?')
     );
-    // Utnij do ostatniej kropki/wykrzyknika/pytajnika, ale tylko jeśli ma sensowną długość.
     if (lastSentenceEnd >= 80) {
       return candidate.slice(0, lastSentenceEnd + 1).trim();
     }
   }
 
-  // Fallback: utnij na ostatniej spacji (żeby nie ucinać słowa).
   const lastSpace = candidate.lastIndexOf(' ');
   if (lastSpace >= 80) return candidate.slice(0, lastSpace).trim();
 
-  // Ostateczny fallback.
   return candidate.trim();
 }
 
@@ -317,8 +311,6 @@ export async function generateProposalViaOpenRouter(args: {
   const t0 = Date.now();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
-  // Small, safe variability to reduce repetitive generations for the same topic.
-  // Never include this value in the returned JSON (enforced by system prompt).
   const variationSeed =
     (
       globalThis.crypto as { randomUUID?: () => string } | undefined
@@ -365,36 +357,30 @@ export async function generateProposalViaOpenRouter(args: {
       headers: {
         Authorization: `Bearer ${args.apiKey}`,
         'Content-Type': 'application/json',
-        // Avoid any intermediary caching of POST responses.
         'Cache-Control': 'no-store',
         Pragma: 'no-cache',
-        // Best-effort cache buster for gateways/proxies.
         'X-Request-Id': variationSeed,
       },
       body: JSON.stringify({
         model: args.model,
         temperature: 0.9,
         top_p: 0.95,
-        // Dodatkowy bezpiecznik: ogranicz długość odpowiedzi.
         max_tokens: 250,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
       }),
-      // In runtimes that implement fetch caching, force no-store.
       cache: 'no-store',
       signal: controller.signal,
     });
 
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      const err = new Error(
+      throw makeHttpStatusError(
         `OpenRouter error: ${res.status} ${res.statusText}${text ? `; body=${text}` : ''}`
+        ,res.status
       );
-      // @ts-expect-error attach http status for mapping
-      err.httpStatus = res.status;
-      throw err;
     }
 
     const json = (await res.json()) as OpenRouterChatCompletionResponse;
@@ -412,8 +398,6 @@ export async function generateProposalViaOpenRouter(args: {
     const front = clampTrimmed(rawFront, 200);
     let back = rawBack.trim();
 
-    // Jeśli model przegina z długością, zrób automatyczny krok „skróć do ≤600”,
-    // zamiast ucinać w połowie zdania.
     if (back.length > 600) {
       try {
         back = await shortenBackViaOpenRouter({
@@ -423,7 +407,7 @@ export async function generateProposalViaOpenRouter(args: {
           timeoutMs: Math.min(12_000, timeoutMs),
         });
       } catch {
-        // Best-effort: jeśli skracanie się nie uda, i tak nie ucinaj w połowie słowa/zdania.
+        // Jeśli skracanie się nie uda, używamy oryginalnego tekstu
       }
     }
 
@@ -518,7 +502,6 @@ async function shortenBackViaOpenRouter(args: {
 function stripCodeFences(text: string): string {
   const t = text.trim();
   if (!t.startsWith('```')) return t;
-  // Remove first and last fence if present.
   const withoutFirst = t.replace(/^```[a-zA-Z0-9_-]*\s*\n?/, '');
   return withoutFirst.replace(/\n?```$/, '').trim();
 }
@@ -586,12 +569,10 @@ export async function generateTopicDescriptionViaOpenRouter(args: {
 
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      const err = new Error(
+      throw makeHttpStatusError(
         `OpenRouter error: ${res.status} ${res.statusText}${text ? `; body=${text}` : ''}`
+        ,res.status
       );
-      // @ts-expect-error attach http status for mapping
-      err.httpStatus = res.status;
-      throw err;
     }
 
     const json = (await res.json()) as OpenRouterChatCompletionResponse;

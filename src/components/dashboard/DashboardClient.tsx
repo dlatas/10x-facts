@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useCallback, useState } from 'react';
 
 import type { FavoriteFlashcardDto } from '@/types';
 import { useDashboardData } from '@/components/hooks/useDashboardData';
@@ -20,23 +20,22 @@ export function DashboardClient() {
     setFavorite,
   } = useDashboardData();
 
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedFlashcard, setSelectedFlashcard] =
-    React.useState<FavoriteFlashcardDto | null>(null);
+    useState<FavoriteFlashcardDto | null>(null);
 
-  const openFlashcard = React.useCallback((flashcard: FavoriteFlashcardDto) => {
+  const openFlashcard = useCallback((flashcard: FavoriteFlashcardDto) => {
     setSelectedFlashcard(flashcard);
     setIsModalOpen(true);
   }, []);
 
-  const closeFlashcard = React.useCallback(() => {
+  const closeFlashcard = useCallback(() => {
     setIsModalOpen(false);
     setSelectedFlashcard(null);
   }, []);
 
-  const unfavorite = React.useCallback(
+  const unfavorite = useCallback(
     async (flashcard: FavoriteFlashcardDto) => {
-      // Dashboard pokazuje tylko ulubione; odpięcie usuwa z sekcji.
       await setFavorite(flashcard.id, false);
       if (selectedFlashcard?.id === flashcard.id) {
         closeFlashcard();

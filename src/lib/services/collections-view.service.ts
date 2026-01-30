@@ -9,13 +9,7 @@ import { fetchJson } from '@/lib/http/fetch-json';
 import { HttpError } from '@/lib/http/http-error';
 
 interface CollectionsViewServiceOptions {
-  /**
-   * Bazowy URL API – domyślnie internal API w Astro.
-   */
   baseUrl?: string;
-  /**
-   * Opcjonalny token Bearer. Middleware w projekcie mapuje go do request-scoped Supabase client.
-   */
   accessToken?: string;
 }
 
@@ -38,7 +32,6 @@ function buildCollectionsListUrl(args: {
   if (typeof args.query.sort === 'string') sp.set('sort', args.query.sort);
   if (typeof args.query.order === 'string') sp.set('order', args.query.order);
 
-  // URL() potrzebuje originu; na koniec bierzemy path+query
   return `${url.pathname}${url.search}`;
 }
 

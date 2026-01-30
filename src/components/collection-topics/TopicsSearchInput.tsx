@@ -1,11 +1,11 @@
-import * as React from 'react';
+import { memo } from 'react';
 import { X } from 'lucide-react';
 
 import type { TopicsSearchInputProps } from '@/components/collection-topics/collection-topics.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-export const TopicsSearchInput = React.memo(function TopicsSearchInput(
+export const TopicsSearchInput = memo(function TopicsSearchInput(
   props: TopicsSearchInputProps
 ) {
   return (

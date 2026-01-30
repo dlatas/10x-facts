@@ -1,10 +1,8 @@
 import type { AiGenerationEvent, Flashcard, Topic } from '@/types/entities';
 
-// API exposes these enums; intersect with DB string fields for consistency.
 export type AiGenerationStatus = AiGenerationEvent['status'] &
   ('accepted' | 'rejected' | 'skipped' | 'failed');
 
-// AI generation
 export interface AiGenerateCommand {
   topic_id: Topic['id'];
 }
@@ -28,10 +26,6 @@ export interface AiGenerateResponseDto {
   proposal: AiGenerationProposalDto;
   limit: AiGenerationLimitDto;
   is_random: AiGenerationEvent['is_random'];
-  /**
-   * Tylko dla tematu losowego: identyfikator wylosowanej domeny/tematu (telemetria).
-   * Dla normalnych tematów: null.
-   */
   random_domain_label?: AiGenerationEvent['random_domain_label'];
 }
 

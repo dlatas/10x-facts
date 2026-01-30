@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -15,10 +15,10 @@ import { createAuthService } from '@/lib/services/auth.service';
 export function UserAvatarMenu(props: { email?: string | null }) {
   const email = props.email ?? null;
   const letter = (email?.trim()?.[0] ?? 'U').toUpperCase();
-  const auth = React.useMemo(() => createAuthService(), []);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const auth = useMemo(() => createAuthService(), []);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const onLogout = React.useCallback(async () => {
+  const onLogout = useCallback(async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {

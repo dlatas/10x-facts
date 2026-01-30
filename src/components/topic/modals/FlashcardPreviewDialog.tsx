@@ -1,5 +1,3 @@
-import * as React from "react";
-
 import type { FlashcardItemVm } from "@/components/topic/topic.types";
 import { Dialog, DialogCloseButton, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 

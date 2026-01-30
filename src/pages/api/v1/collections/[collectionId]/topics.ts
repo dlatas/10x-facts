@@ -24,11 +24,9 @@ const RANDOM_TOPIC_SYSTEM_KEY = 'random_topic';
 export async function GET(context: APIContext): Promise<Response> {
   const supabase = context.locals.supabase;
 
-  // 1) Auth
   const auth = await requireUserId(context);
   if (!auth.ok) return auth.response;
 
-  // 2) Validate param
   const collectionIdParsed = collectionIdParamSchema.safeParse(
     context.params.collectionId
   );
@@ -41,7 +39,6 @@ export async function GET(context: APIContext): Promise<Response> {
     });
   }
 
-  // 3) Ensure collection exists (404 if not)
   let collection: { id: string; system_key: string | null };
   try {
     collection = await getCollectionOr404({
@@ -56,18 +53,10 @@ export async function GET(context: APIContext): Promise<Response> {
     ) {
       return jsonError(404, err.message);
     }
-    console.error(
-      '[GET /collections/:collectionId/topics] getCollectionOr404',
-      {
-        userId: auth.userId,
-        collectionId: collectionIdParsed.data,
-        err,
-      }
-    );
+
     return jsonError(500, 'Błąd podczas pobierania kolekcji.');
   }
 
-  // 4) Best-effort: ensure system "random_topic" exists for random collection
   if (collection.system_key === RANDOM_COLLECTION_SYSTEM_KEY) {
     try {
       await ensureRandomTopicForCollection({
@@ -76,11 +65,10 @@ export async function GET(context: APIContext): Promise<Response> {
         collectionId: collection.id,
       });
     } catch {
-      // ignore (race conditions / transient DB issues shouldn't break listing)
+      // Ignoruj błędy podczas tworzenia losowego tematu
     }
   }
 
-  // 5) Parse + validate query
   const url = new URL(context.request.url);
   const queryParsed = topicsListQuerySchema.safeParse({
     q: url.searchParams.get('q') ?? undefined,
@@ -99,7 +87,6 @@ export async function GET(context: APIContext): Promise<Response> {
     });
   }
 
-  // 6) List topics
   try {
     const result = await listTopicsInCollection({
       supabase,
@@ -108,10 +95,6 @@ export async function GET(context: APIContext): Promise<Response> {
       ...queryParsed.data,
     });
 
-    // Small-effort fallback: jeśli to random collection i (np. przez chwilowy błąd)
-    // temat systemowy nie pojawił się w liście, spróbuj jeszcze raz go zapewnić i
-    // odśwież listę. To nie naprawia przypadków „random_topic w innej kolekcji”
-    // (immutable + unikalność per-user), ale eliminuje brak przy transient errorach.
     if (
       collection.system_key === RANDOM_COLLECTION_SYSTEM_KEY &&
       !result.items.some((t) => t.system_key === RANDOM_TOPIC_SYSTEM_KEY)
@@ -131,7 +114,7 @@ export async function GET(context: APIContext): Promise<Response> {
         result.items = retry.items;
         result.total = retry.total;
       } catch {
-        // ignore
+        // Ignoruj błędy retry - używamy oryginalnego wyniku
       }
     }
 

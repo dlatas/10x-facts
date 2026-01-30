@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { memo, useMemo } from 'react';
 import { X } from 'lucide-react';
 
 import type { TopicRowProps } from '@/components/collection-topics/collection-topics.types';
@@ -6,10 +6,10 @@ import { SystemBadge } from '@/components/collections/SystemBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
-export const TopicRow = React.memo(function TopicRow(props: TopicRowProps) {
+export const TopicRow = memo(function TopicRow(props: TopicRowProps) {
   const canDelete = !props.item.isSystem;
 
-  const detailsUrl = React.useMemo(() => {
+  const detailsUrl = useMemo(() => {
     const url = new URL(`/topics/${encodeURIComponent(props.item.id)}`, 'http://local');
     if (props.collectionIdForContext) {
       url.searchParams.set('fromCollectionId', props.collectionIdForContext);
@@ -17,7 +17,6 @@ export const TopicRow = React.memo(function TopicRow(props: TopicRowProps) {
     if (props.collectionNameForContext) {
       url.searchParams.set('fromCollectionName', props.collectionNameForContext);
     }
-    // Szybki fallback na nazwę w nagłówku, zanim dojdą dane z API.
     url.searchParams.set('topicName', props.item.name);
     return `${url.pathname}${url.search}`;
   }, [props.collectionIdForContext, props.collectionNameForContext, props.item.id, props.item.name]);

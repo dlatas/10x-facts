@@ -1,9 +1,9 @@
-import * as React from 'react';
+import { memo } from 'react';
 
 import type { TopicsListProps } from '@/components/collection-topics/collection-topics.types';
 import { TopicRow } from '@/components/collection-topics/TopicRow';
 
-export const TopicsList = React.memo(function TopicsList(props: TopicsListProps) {
+export const TopicsList = memo(function TopicsList(props: TopicsListProps) {
   return (
     <div className="mt-6 space-y-3">
       {props.items.map((item) => (

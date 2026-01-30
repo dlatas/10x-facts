@@ -63,8 +63,6 @@ export async function listCollections(
   }
 
   const { data, error, count } = await q
-    // Systemowe kolekcje (np. Random) zawsze na górze listy.
-    // Dzięki temu dashboard z małym limitem zawsze pokaże „Random”.
     .order('system_key', { ascending: false, nullsFirst: false })
     .order(args.sort, { ascending: args.order === 'asc' })
     .range(args.offset, rangeTo);
@@ -144,10 +142,6 @@ export async function deleteCollection(args: {
     );
   }
 
-  // Uwaga: PostgREST może zwrócić sukces nawet gdy 0 wierszy spełnia filtr (np. przy RLS).
-  // Najpewniej jest sprawdzić `count`, a w razie 0 rozróżnić:
-  // - rekord nadal istnieje -> RLS / brak uprawnień (403)
-  // - rekord zniknął -> race / już usunięty (404)
   const { error: deleteError, count } = await args.supabase
     .from('collections')
     .delete({ count: 'exact' })

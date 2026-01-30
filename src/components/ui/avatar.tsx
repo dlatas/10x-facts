@@ -1,9 +1,9 @@
-import * as React from "react";
+import type { ComponentPropsWithoutRef } from "react";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 
 import { cn } from "@/lib/utils";
 
-const Avatar = ({ className, ...props }: React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>) => {
+const Avatar = ({ className, ...props }: ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>) => {
   return (
     <AvatarPrimitive.Root
       data-slot="avatar"
@@ -13,7 +13,7 @@ const Avatar = ({ className, ...props }: React.ComponentPropsWithoutRef<typeof A
   );
 };
 
-const AvatarFallback = ({ className, ...props }: React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>) => {
+const AvatarFallback = ({ className, ...props }: ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>) => {
   return (
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"

@@ -1,10 +1,10 @@
-import * as React from 'react';
+import { memo } from 'react';
 
 import type { CollectionTopicsToolbarProps } from '@/components/collection-topics/collection-topics.types';
 import { TopicsSearchInput } from '@/components/collection-topics/TopicsSearchInput';
 import { Button } from '@/components/ui/button';
 
-export const CollectionTopicsToolbar = React.memo(function CollectionTopicsToolbar(
+export const CollectionTopicsToolbar = memo(function CollectionTopicsToolbar(
   props: CollectionTopicsToolbarProps
 ) {
   const canCreate = props.canCreate ?? true;

@@ -12,14 +12,12 @@ export async function fireConfetti(args?: {
   const origin = args?.origin ?? { x: 0.5, y: 0.25 };
   const particleCount = args?.particleCount ?? 110;
 
-  // canvas-confetti jest browserowe — import dynamiczny (bezpieczne dla SSR).
   const mod = (await import('canvas-confetti')) as unknown as {
     default?: (opts: Record<string, unknown>) => void;
   };
   const confetti = mod.default;
   if (!confetti) return;
 
-  // Dwa krótkie „strzały” wyglądają lepiej niż jeden duży.
   confetti({
     particleCount: Math.round(particleCount * 0.6),
     spread: 70,

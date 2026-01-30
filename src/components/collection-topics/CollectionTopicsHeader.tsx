@@ -1,9 +1,9 @@
-import * as React from 'react';
+import { memo } from 'react';
 
 import type { CollectionTopicsHeaderProps } from '@/components/collection-topics/collection-topics.types';
 import { Button } from '@/components/ui/button';
 
-export const CollectionTopicsHeader = React.memo(function CollectionTopicsHeader(
+export const CollectionTopicsHeader = memo(function CollectionTopicsHeader(
   props: CollectionTopicsHeaderProps
 ) {
   return (

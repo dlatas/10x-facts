@@ -70,7 +70,9 @@ describe('lib/http/fetch-json', () => {
     await fetchJson({ url: 'http://x', accessToken: 't1' });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [, init] = fetchMock.mock.calls[0]!;
+    const firstCall = fetchMock.mock.calls[0];
+    expect(firstCall).toBeTruthy();
+    const [, init] = firstCall ?? [];
     expect(init?.headers).toMatchObject({
       Authorization: 'Bearer t1',
     });

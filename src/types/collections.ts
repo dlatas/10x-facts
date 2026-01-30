@@ -2,15 +2,10 @@ import type { TablesInsert } from '@/db/database.types';
 import type { ListResponse, OkResponse, SortOrder } from '@/types/common';
 import type { Collection } from '@/types/entities';
 
-// Collections
 export type CollectionDto = Pick<
   Collection,
   'id' | 'name' | 'system_key' | 'created_at' | 'updated_at'
 > & {
-  /**
-   * Opcjonalne pole agregujące (np. liczba tematów w kolekcji).
-   * Dla części endpointów może nie być zwracane.
-   */
   topics_count?: number;
 };
 

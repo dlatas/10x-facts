@@ -1,4 +1,5 @@
-import * as React from "react";
+import type { ComponentType } from "react";
+import { useState } from "react";
 
 import { Folder, Heart, LayoutGrid, Menu } from "lucide-react";
 
@@ -12,14 +13,17 @@ function isActive(pathname: string, href: string) {
   return pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
 }
 
-const iconMap: Record<NavLinkId, React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>> = {
+const iconMap: Record<
+  NavLinkId,
+  ComponentType<{ className?: string; "aria-hidden"?: boolean }>
+> = {
   dashboard: LayoutGrid,
   collections: Folder,
   favorites: Heart,
 };
 
 export function MobileNav(props: { pathname: string }) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -64,7 +68,7 @@ export function MobileNav(props: { pathname: string }) {
                     : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
                 )}
               >
-                <Icon className="size-4" aria-hidden="true" />
+                <Icon className="size-4" aria-hidden={true} />
                 <span className="truncate">{link.label}</span>
               </a>
             );

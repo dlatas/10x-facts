@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCollectionTopicsData } from '@/components/hooks/useCollectionTopicsData';
 import type { TopicsListItemVm } from '@/components/collection-topics/collection-topics.types';
@@ -15,15 +15,14 @@ export function CollectionTopicsClient(props: { collectionId: string }) {
 
   const view = useCollectionTopicsData({ collectionId });
 
-  // UI state (dialogi)
-  const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [deleteTarget, setDeleteTarget] = React.useState<TopicsListItemVm | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<TopicsListItemVm | null>(null);
 
   const isBusy = view.isCreating || view.isDeleting;
   const isEmpty = view.status === 'ready' && view.items.length === 0;
 
-  const itemsVm = React.useMemo<TopicsListItemVm[]>(() => {
+  const itemsVm = useMemo<TopicsListItemVm[]>(() => {
     return view.items.map((dto) => {
       const systemKey = dto.system_key;
       return {
@@ -40,32 +39,29 @@ export function CollectionTopicsClient(props: { collectionId: string }) {
     });
   }, [view.items]);
 
-  const isRandomCollection = React.useMemo(() => {
-    // Prefer pewny sygnał: obecność tematu systemowego random_topic w tej kolekcji.
+  const isRandomCollection = useMemo(() => {
     if (itemsVm.some((t) => t.systemKey === 'random_topic')) return true;
-
-    // Fallback: heurystyka po nazwie przekazanej w nawigacji.
     const n = (view.collectionName ?? '').trim().toLowerCase();
     return n === 'random' || n === 'kolekcja losowa';
   }, [itemsVm, view.collectionName]);
 
-  const visibleItems = React.useMemo(() => {
+  const visibleItems = useMemo(() => {
     if (!isRandomCollection) return itemsVm;
     return itemsVm.filter((t) => t.systemKey === 'random_topic');
   }, [isRandomCollection, itemsVm]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isRandomCollection) return;
     if (createDialogOpen) setCreateDialogOpen(false);
   }, [createDialogOpen, isRandomCollection]);
 
-  const requestDelete = React.useCallback((item: TopicsListItemVm) => {
+  const requestDelete = useCallback((item: TopicsListItemVm) => {
     if (item.isSystem) return;
     setDeleteTarget(item);
     setDeleteDialogOpen(true);
   }, []);
 
-  const confirmDelete = React.useCallback(async () => {
+  const confirmDelete = useCallback(async () => {
     if (!deleteTarget) return;
     const res = await view.submitDelete({
       id: deleteTarget.id,
@@ -80,7 +76,7 @@ export function CollectionTopicsClient(props: { collectionId: string }) {
     toast.success('Usunięto temat.');
   }, [deleteTarget, view]);
 
-  const submitCreate = React.useCallback(
+  const submitCreate = useCallback(
     async (name: string) => {
       const created = await view.submitCreate(name);
       if (!created) return;

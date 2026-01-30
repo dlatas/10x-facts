@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { useCollectionsView } from '@/components/hooks/useCollectionsView';
@@ -10,7 +10,7 @@ import { DeleteCollectionConfirmDialog } from '@/components/collections/DeleteCo
 import { toast } from 'sonner';
 
 export function CollectionsClient() {
-  const [queryClient] = React.useState(() => new QueryClient());
+  const [queryClient] = useState(() => new QueryClient());
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -25,7 +25,7 @@ function CollectionsClientInner() {
   const isBusy = view.isCreating || view.isDeleting;
   const isEmpty = view.status === 'ready' && view.items.length === 0;
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window === 'undefined') return;
     const url = new URL(window.location.href);
     const reason = url.searchParams.get('reason');

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { memo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
@@ -24,7 +24,7 @@ export interface CreateCollectionDialogProps {
   errorMessage: string | null;
 }
 
-export const CreateCollectionDialog = React.memo(function CreateCollectionDialog(
+export const CreateCollectionDialog = memo(function CreateCollectionDialog(
   props: CreateCollectionDialogProps
 ) {
   const form = useForm<z.infer<typeof createCollectionCommandSchema>>({
@@ -32,7 +32,7 @@ export const CreateCollectionDialog = React.memo(function CreateCollectionDialog
     defaultValues: { name: '' },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (props.open) return;
     form.reset({ name: '' });
     form.clearErrors();

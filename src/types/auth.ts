@@ -1,7 +1,6 @@
 import type { OkResponse } from '@/types/common';
 import type { Profile } from '@/types/entities';
 
-// Auth
 export interface AuthSignupCommand {
   email: string;
   password: string;

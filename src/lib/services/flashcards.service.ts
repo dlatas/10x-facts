@@ -28,8 +28,6 @@ const FLASHCARD_DTO_FIELDS =
 const FAVORITE_FLASHCARD_DTO_FIELDS = 'id,front,back,topic_id' as const;
 
 function escapeLikePattern(value: string): string {
-  // PostgREST `.or(...)` uses comma separators; sanitize to avoid breaking the filter string.
-  // Also escape LIKE wildcards to reduce accidental heavy queries.
   return value
     .replaceAll('\\', '\\\\')
     .replaceAll(',', ' ')
@@ -39,7 +37,10 @@ function escapeLikePattern(value: string): string {
 
 function isForbiddenSourceChangeError(err: unknown): boolean {
   const e = err as Partial<PostgrestError> & { message?: unknown };
-  return typeof e?.message === 'string' && e.message.includes('flashcard source is immutable');
+  return (
+    typeof e?.message === 'string' &&
+    e.message.includes('flashcard source is immutable')
+  );
 }
 
 function shuffleInPlace<T>(arr: T[]): void {
@@ -63,7 +64,10 @@ export async function getTopicOrThrowNotFound(args: {
 
   if (error) throw error;
   if (!data) {
-    throw new FlashcardsServiceError('topic_not_found', 'Nie znaleziono tematu.');
+    throw new FlashcardsServiceError(
+      'topic_not_found',
+      'Nie znaleziono tematu.'
+    );
   }
 
   return data as { id: string };
@@ -138,11 +142,13 @@ export async function createManualFlashcard(args: {
   return data as FlashcardDto;
 }
 
-export async function updateFlashcard(args: {
-  supabase: SupabaseClient;
-  userId: string;
-  flashcardId: string;
-} & UpdateFlashcardCommand): Promise<FlashcardDto> {
+export async function updateFlashcard(
+  args: {
+    supabase: SupabaseClient;
+    userId: string;
+    flashcardId: string;
+  } & UpdateFlashcardCommand
+): Promise<FlashcardDto> {
   const { data: existing, error: existingError } = await args.supabase
     .from('flashcards')
     .select('id')
@@ -161,7 +167,8 @@ export async function updateFlashcard(args: {
   const updatePayload: Record<string, unknown> = {};
   if (args.front !== undefined) updatePayload.front = args.front;
   if (args.back !== undefined) updatePayload.back = args.back;
-  if (args.is_favorite !== undefined) updatePayload.is_favorite = args.is_favorite;
+  if (args.is_favorite !== undefined)
+    updatePayload.is_favorite = args.is_favorite;
 
   const { data, error } = await args.supabase
     .from('flashcards')
@@ -218,8 +225,6 @@ export async function getRandomFavoriteFlashcards(args: {
   userId: string;
   limit: number;
 }): Promise<FavoriteFlashcardDto[]> {
-  // Preferowane: RPC (SQL) dla prawdziwego "random" bez pobierania dużych próbek.
-  // Fallback: MVP losowanie w pamięci (np. gdy migracje nie są odpalone).
   const rpcLimit = Math.min(Math.max(args.limit, 1), 20);
   try {
     const { data, error } = await args.supabase.rpc(
@@ -229,10 +234,9 @@ export async function getRandomFavoriteFlashcards(args: {
     if (error) throw error;
     if (Array.isArray(data)) return data as FavoriteFlashcardDto[];
   } catch {
-    // ignore -> fallback below
+    // Fallback do alternatywnej metody pobierania ulubionych fiszek
   }
 
-  // MVP (bez RPC): pobierz próbkę i wylosuj w pamięci.
   const sampleSize = Math.min(200, Math.max(args.limit * 20, args.limit));
 
   const { data, error } = await args.supabase
@@ -251,4 +255,3 @@ export async function getRandomFavoriteFlashcards(args: {
   shuffleInPlace(items);
   return items.slice(0, args.limit);
 }
-

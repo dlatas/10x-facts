@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { CollectionDto, TopicDto, FlashcardDto, FavoriteFlashcardDto } from "@/types";
 import { redirectToLogin } from "@/lib/http/redirect";
@@ -32,41 +32,41 @@ function mapTopicLabel(dto: TopicDto): string {
 }
 
 export function FavoritesClient() {
-  const collectionsService = React.useMemo(() => createCollectionsViewService(), []);
-  const topicsService = React.useMemo(() => createCollectionTopicsViewService(), []);
-  const flashcardsService = React.useMemo(() => createTopicFlashcardsViewService(), []);
+  const collectionsService = useMemo(() => createCollectionsViewService(), []);
+  const topicsService = useMemo(() => createCollectionTopicsViewService(), []);
+  const flashcardsService = useMemo(() => createTopicFlashcardsViewService(), []);
 
-  const [collections, setCollections] = React.useState<CollectionDto[]>([]);
-  const [topics, setTopics] = React.useState<{ id: string; displayName: string; system_key: string | null }[]>([]);
+  const [collections, setCollections] = useState<CollectionDto[]>([]);
+  const [topics, setTopics] = useState<{ id: string; displayName: string; system_key: string | null }[]>([]);
 
-  const [selectedCollectionId, setSelectedCollectionId] = React.useState<string>(ALL_COLLECTIONS_VALUE);
-  const [selectedTopicId, setSelectedTopicId] = React.useState<string>(ALL_TOPICS_VALUE);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string>(ALL_COLLECTIONS_VALUE);
+  const [selectedTopicId, setSelectedTopicId] = useState<string>(ALL_TOPICS_VALUE);
 
-  const [favorites, setFavorites] = React.useState<FavoriteFlashcardDto[]>([]);
+  const [favorites, setFavorites] = useState<FavoriteFlashcardDto[]>([]);
 
-  const [isLoadingCollections, setIsLoadingCollections] = React.useState(false);
-  const [isLoadingTopics, setIsLoadingTopics] = React.useState(false);
-  const [isLoadingFavorites, setIsLoadingFavorites] = React.useState(false);
-  const [isTogglingFavorite, setIsTogglingFavorite] = React.useState(false);
+  const [isLoadingCollections, setIsLoadingCollections] = useState(false);
+  const [isLoadingTopics, setIsLoadingTopics] = useState(false);
+  const [isLoadingFavorites, setIsLoadingFavorites] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
 
-  const [error, setError] = React.useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [selectedFlashcard, setSelectedFlashcard] = React.useState<FavoriteFlashcardDto | null>(
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFlashcard, setSelectedFlashcard] = useState<FavoriteFlashcardDto | null>(
     null
   );
 
-  const openFlashcard = React.useCallback((flashcard: FavoriteFlashcardDto) => {
+  const openFlashcard = useCallback((flashcard: FavoriteFlashcardDto) => {
     setSelectedFlashcard(flashcard);
     setIsModalOpen(true);
   }, []);
 
-  const closeFlashcard = React.useCallback(() => {
+  const closeFlashcard = useCallback(() => {
     setIsModalOpen(false);
     setSelectedFlashcard(null);
   }, []);
 
-  const refreshCollections = React.useCallback(async () => {
+  const refreshCollections = useCallback(async () => {
     setIsLoadingCollections(true);
     setError(null);
     try {
@@ -90,7 +90,7 @@ export function FavoritesClient() {
     }
   }, [collectionsService, selectedCollectionId]);
 
-  const refreshTopics = React.useCallback(async () => {
+  const refreshTopics = useCallback(async () => {
     if (!selectedCollectionId) {
       setTopics([]);
       setSelectedTopicId(ALL_TOPICS_VALUE);
@@ -130,7 +130,6 @@ export function FavoritesClient() {
         );
 
         const merged = results.flat();
-        // Stabilne dedupe (po id)
         const deduped = Array.from(new Map(merged.map((t) => [t.id, t])).values());
         setTopics(deduped);
         setSelectedTopicId(deduped.length > 0 ? ALL_TOPICS_VALUE : "");
@@ -170,7 +169,7 @@ export function FavoritesClient() {
     }
   }, [collections, selectedCollectionId, topicsService]);
 
-  const fetchFavoritesForTopic = React.useCallback(
+  const fetchFavoritesForTopic = useCallback(
     async (topicId: string): Promise<FavoriteFlashcardDto[]> => {
       const res = await flashcardsService.list(topicId, {
         is_favorite: true,
@@ -191,7 +190,7 @@ export function FavoritesClient() {
     [flashcardsService]
   );
 
-  const refreshFavorites = React.useCallback(async () => {
+  const refreshFavorites = useCallback(async () => {
     if (!selectedTopicId || topics.length === 0) {
       setFavorites([]);
       return;
@@ -223,19 +222,19 @@ export function FavoritesClient() {
     }
   }, [fetchFavoritesForTopic, selectedTopicId, topics]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     void refreshCollections();
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     void refreshTopics();
   }, [refreshTopics]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     void refreshFavorites();
   }, [refreshFavorites]);
 
-  const unfavorite = React.useCallback(
+  const unfavorite = useCallback(
     async (flashcard: FavoriteFlashcardDto) => {
       if (isTogglingFavorite) return;
       setIsTogglingFavorite(true);

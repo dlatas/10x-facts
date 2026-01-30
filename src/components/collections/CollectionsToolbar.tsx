@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { memo } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { CollectionsSearchInput } from '@/components/collections/CollectionsSearchInput';
@@ -11,7 +11,7 @@ export interface CollectionsToolbarProps {
   isBusy?: boolean;
 }
 
-export const CollectionsToolbar = React.memo(function CollectionsToolbar(
+export const CollectionsToolbar = memo(function CollectionsToolbar(
   props: CollectionsToolbarProps
 ) {
   return (

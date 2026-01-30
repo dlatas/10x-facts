@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type {
@@ -65,29 +65,24 @@ export function useCollectionsView(args?: {
   defaultLimit?: number;
   defaultOffset?: number;
 }): {
-  // data
   items: CollectionsListItemVm[];
   total: number;
 
-  // list state
   status: 'loading' | 'error' | 'ready';
   errorMessage: string | null;
   retry: () => void;
 
-  // URL-driven search
   queryDraft: string;
   setQueryDraft: (v: string) => void;
   commitQueryNow: () => void;
   committedQuery: string;
 
-  // create
   createDialogOpen: boolean;
   setCreateDialogOpen: (open: boolean) => void;
   createError: string | null;
   submitCreate: (name: string) => Promise<void>;
   isCreating: boolean;
 
-  // delete
   deleteDialogOpen: boolean;
   setDeleteDialogOpen: (open: boolean) => void;
   deleteTarget: CollectionsListItemVm | null;
@@ -99,30 +94,26 @@ export function useCollectionsView(args?: {
   const offset = args?.defaultOffset ?? 0;
 
   const queryClient = useQueryClient();
-  const service = React.useMemo(() => createCollectionsViewService(), []);
+  const service = useMemo(() => createCollectionsViewService(), []);
 
-  // URL-driven search: draft (input) + committed (query key)
-  const [queryDraft, setQueryDraft] = React.useState('');
-  const [committedQuery, setCommittedQuery] = React.useState('');
-  const debounceRef = React.useRef<number | null>(null);
+  const [queryDraft, setQueryDraft] = useState('');
+  const [committedQuery, setCommittedQuery] = useState('');
+  const debounceRef = useRef<number | null>(null);
 
-  // UI state
-  const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
-  const [createError, setCreateError] = React.useState<string | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] =
-    React.useState<CollectionsListItemVm | null>(null);
+    useState<CollectionsListItemVm | null>(null);
 
-  // init from URL
-  React.useEffect(() => {
+  useEffect(() => {
     const initial = readQueryFromUrl();
     setQueryDraft(initial);
     setCommittedQuery(initial);
   }, []);
 
-  // debounce URL sync + query commit
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window === 'undefined') return;
 
     if (debounceRef.current != null) {
@@ -138,7 +129,7 @@ export function useCollectionsView(args?: {
     return () => window.clearTimeout(handle);
   }, [queryDraft]);
 
-  const commitQueryNow = React.useCallback(() => {
+  const commitQueryNow = useCallback(() => {
     if (typeof window === 'undefined') return;
     if (debounceRef.current != null) {
       window.clearTimeout(debounceRef.current);
@@ -169,7 +160,7 @@ export function useCollectionsView(args?: {
     retry: false,
   });
 
-  const items = React.useMemo(() => {
+  const items = useMemo(() => {
     const dtoItems = listQuery.data?.items ?? [];
     return dtoItems.map(mapDtoToVm);
   }, [listQuery.data?.items]);
@@ -272,7 +263,6 @@ export function useCollectionsView(args?: {
       );
     },
     onSettled: async () => {
-      // Defensive: zawsze próbuj zsynchronizować listę po mutacji.
       await queryClient.invalidateQueries({ queryKey: COLLECTIONS_QUERY_KEY });
     },
   });
@@ -289,11 +279,11 @@ export function useCollectionsView(args?: {
       : 'Nie udało się załadować kolekcji.'
     : null;
 
-  const retry = React.useCallback(() => {
+  const retry = useCallback(() => {
     if (listQuery.isError) void listQuery.refetch();
   }, [listQuery]);
 
-  const submitCreate = React.useCallback(
+  const submitCreate = useCallback(
     async (name: string) => {
       setCreateError(null);
       await createMutation.mutateAsync(name);
@@ -301,13 +291,13 @@ export function useCollectionsView(args?: {
     [createMutation]
   );
 
-  const requestDelete = React.useCallback((item: CollectionsListItemVm) => {
+  const requestDelete = useCallback((item: CollectionsListItemVm) => {
     if (item.isSystem) return;
     setDeleteTarget(item);
     setDeleteDialogOpen(true);
   }, []);
 
-  const confirmDelete = React.useCallback(async () => {
+  const confirmDelete = useCallback(async () => {
     if (!deleteTarget) return;
     await deleteMutation.mutateAsync(deleteTarget.id);
   }, [deleteMutation, deleteTarget]);

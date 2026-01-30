@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { memo } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,7 +11,7 @@ export interface CollectionsListStateProps {
   onClearFilter?: () => void;
 }
 
-export const CollectionsListState = React.memo(function CollectionsListState(
+export const CollectionsListState = memo(function CollectionsListState(
   props: CollectionsListStateProps
 ) {
   if (props.status === 'loading') {

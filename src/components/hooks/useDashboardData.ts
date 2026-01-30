@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { CollectionDto, FavoriteFlashcardDto } from '@/types';
 import { redirectToLogin } from '@/lib/http/redirect';
@@ -20,9 +20,9 @@ export function useDashboardData(args?: {
   const limitCollections = args?.limitCollections ?? 6;
   const limitFavorites = args?.limitFavorites ?? 10;
 
-  const service = React.useMemo(() => createDashboardService(), []);
+  const service = useMemo(() => createDashboardService(), []);
 
-  const [state, setState] = React.useState<DashboardDataState>({
+  const [state, setState] = useState<DashboardDataState>({
     collections: [],
     favorites: [],
     isLoading: true,
@@ -31,19 +31,19 @@ export function useDashboardData(args?: {
     error: null,
   });
 
-  const refreshCollections = React.useCallback(async () => {
+  const refreshCollections = useCallback(async () => {
     setState((s) => ({ ...s, error: null }));
     const collections = await service.getCollections(limitCollections);
     setState((s) => ({ ...s, collections }));
   }, [limitCollections, service]);
 
-  const refreshFavorites = React.useCallback(async () => {
+  const refreshFavorites = useCallback(async () => {
     setState((s) => ({ ...s, error: null }));
     const favorites = await service.getRandomFavorites(limitFavorites);
     setState((s) => ({ ...s, favorites }));
   }, [limitFavorites, service]);
 
-  const refreshAll = React.useCallback(async () => {
+  const refreshAll = useCallback(async () => {
     setState((s) => ({ ...s, isLoading: true, error: null }));
     try {
       const [collections, favorites] = await Promise.all([
@@ -71,7 +71,7 @@ export function useDashboardData(args?: {
     }
   }, [limitCollections, limitFavorites, service]);
 
-  const createCollection = React.useCallback(
+  const createCollection = useCallback(
     async (name: string) => {
       setState((s) => ({ ...s, isCreatingCollection: true, error: null }));
       try {
@@ -100,12 +100,11 @@ export function useDashboardData(args?: {
     [refreshCollections, service]
   );
 
-  const setFavorite = React.useCallback(
+  const setFavorite = useCallback(
     async (flashcardId: string, isFavorite: boolean) => {
       if (!flashcardId) return;
 
       const previous = state.favorites;
-      // Dashboard pokazuje tylko ulubione, więc odpięcie usuwa z listy.
       const next = isFavorite
         ? previous
         : previous.filter((f) => f.id !== flashcardId);
@@ -128,7 +127,6 @@ export function useDashboardData(args?: {
             return;
           }
         }
-        // rollback
         setState((s) => ({
           ...s,
           favorites: previous,
@@ -144,7 +142,7 @@ export function useDashboardData(args?: {
     [service, state.favorites]
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     void refreshAll();
   }, [refreshAll]);
 

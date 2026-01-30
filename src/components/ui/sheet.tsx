@@ -1,4 +1,4 @@
-import * as React from "react";
+import type { ComponentProps, ComponentPropsWithoutRef } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
@@ -13,7 +13,7 @@ const SheetPortal = DialogPrimitive.Portal;
 function SheetOverlay({
   className,
   ...props
-}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>) {
+}: ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>) {
   return (
     <DialogPrimitive.Overlay
       data-slot="sheet-overlay"
@@ -67,7 +67,7 @@ function SheetContent({
   className,
   children,
   ...props
-}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> &
+}: ComponentPropsWithoutRef<typeof DialogPrimitive.Content> &
   VariantProps<typeof sheetVariants>) {
   return (
     <SheetPortal>
@@ -95,7 +95,7 @@ function SheetContent({
   );
 }
 
-function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
+function SheetHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-header"
@@ -105,7 +105,7 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
+function SheetFooter({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-footer"
@@ -118,7 +118,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
 function SheetTitle({
   className,
   ...props
-}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
+}: ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
       data-slot="sheet-title"
@@ -131,7 +131,7 @@ function SheetTitle({
 function SheetDescription({
   className,
   ...props
-}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>) {
+}: ComponentPropsWithoutRef<typeof DialogPrimitive.Description>) {
   return (
     <DialogPrimitive.Description
       data-slot="sheet-description"

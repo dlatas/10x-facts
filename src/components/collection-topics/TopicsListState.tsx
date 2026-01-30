@@ -1,10 +1,10 @@
-import * as React from 'react';
+import { memo } from 'react';
 
 import type { TopicsListStateProps } from '@/components/collection-topics/collection-topics.types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
-export const TopicsListState = React.memo(function TopicsListState(props: TopicsListStateProps) {
+export const TopicsListState = memo(function TopicsListState(props: TopicsListStateProps) {
   if (props.status === 'loading') {
     return (
       <div className="mt-6 space-y-3" aria-busy="true" aria-live="polite">

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -8,28 +8,27 @@ export function CreateCollectionInline(props: {
   onCreate: (name: string) => Promise<void>;
   isLoading?: boolean;
 }) {
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [value, setValue] = React.useState('');
-  const inputId = React.useId();
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [value, setValue] = useState('');
+  const inputId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const isLoading = props.isLoading ?? false;
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isEditing) return;
-    // Focus only after explicit user intent (click "Dodaj kolekcję"), avoid autoFocus prop.
     const t = window.setTimeout(() => inputRef.current?.focus(), 0);
     return () => window.clearTimeout(t);
   }, [isEditing]);
 
-  const cancel = React.useCallback(() => {
+  const cancel = useCallback(() => {
     if (isLoading) return;
     setIsEditing(false);
     setValue('');
   }, [isLoading]);
 
-  const submit = React.useCallback(async () => {
+  const submit = useCallback(async () => {
     if (isLoading) return;
     const name = value.trim();
     if (!name) return;
@@ -38,7 +37,7 @@ export function CreateCollectionInline(props: {
       setIsEditing(false);
       setValue('');
     } catch {
-      // Błąd jest obsługiwany wyżej (np. w dashboard state); zostawiamy edycję otwartą.
+      // Błąd jest obsługiwany w komponencie nadrzędnym
     }
   }, [isLoading, props, value]);
 
@@ -62,7 +61,6 @@ export function CreateCollectionInline(props: {
       ref={containerRef}
       className="flex w-full items-center gap-2"
       onBlur={(e) => {
-        // Nie zamykaj, jeśli focus przechodzi na przycisk w tym samym komponencie.
         const next = e.relatedTarget as Node | null;
         if (next && containerRef.current?.contains(next)) return;
         cancel();
@@ -98,7 +96,6 @@ export function CreateCollectionInline(props: {
         size="sm"
         disabled={isLoading || value.trim().length === 0}
         onMouseDown={(e) => {
-          // Zapobiega blur na Input przed click (który wcześniej anulował wpis).
           e.preventDefault();
         }}
         onClick={() => void submit()}

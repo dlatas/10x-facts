@@ -1,8 +1,8 @@
-import * as React from "react";
+import type { ComponentProps } from "react";
 
 import { cn } from "@/lib/utils";
 
-function Card({ className, children, ...props }: React.ComponentProps<"div">) {
+function Card({ className, children, ...props }: ComponentProps<"div">) {
   return (
     <div
       data-slot="card"
@@ -14,7 +14,7 @@ function Card({ className, children, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function CardHeader({ className, children, ...props }: React.ComponentProps<"div">) {
+function CardHeader({ className, children, ...props }: ComponentProps<"div">) {
   return (
     <div data-slot="card-header" className={cn("flex flex-col space-y-1.5 p-6", className)} {...props}>
       {children}
@@ -22,7 +22,7 @@ function CardHeader({ className, children, ...props }: React.ComponentProps<"div
   );
 }
 
-function CardTitle({ className, children, ...props }: React.ComponentProps<"h3">) {
+function CardTitle({ className, children, ...props }: ComponentProps<"h3">) {
   return (
     <h3
       data-slot="card-title"
@@ -34,7 +34,7 @@ function CardTitle({ className, children, ...props }: React.ComponentProps<"h3">
   );
 }
 
-function CardDescription({ className, children, ...props }: React.ComponentProps<"p">) {
+function CardDescription({ className, children, ...props }: ComponentProps<"p">) {
   return (
     <p data-slot="card-description" className={cn("text-sm text-muted-foreground", className)} {...props}>
       {children}
@@ -42,7 +42,7 @@ function CardDescription({ className, children, ...props }: React.ComponentProps
   );
 }
 
-function CardContent({ className, children, ...props }: React.ComponentProps<"div">) {
+function CardContent({ className, children, ...props }: ComponentProps<"div">) {
   return (
     <div data-slot="card-content" className={cn("p-6 pt-0", className)} {...props}>
       {children}
@@ -50,7 +50,7 @@ function CardContent({ className, children, ...props }: React.ComponentProps<"di
   );
 }
 
-function CardFooter({ className, children, ...props }: React.ComponentProps<"div">) {
+function CardFooter({ className, children, ...props }: ComponentProps<"div">) {
   return (
     <div data-slot="card-footer" className={cn("flex items-center p-6 pt-0", className)} {...props}>
       {children}

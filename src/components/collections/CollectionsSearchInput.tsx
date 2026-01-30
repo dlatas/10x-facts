@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { memo } from 'react';
 import { Search, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ export interface CollectionsSearchInputProps {
   placeholder?: string;
 }
 
-export const CollectionsSearchInput = React.memo(function CollectionsSearchInput(
+export const CollectionsSearchInput = memo(function CollectionsSearchInput(
   props: CollectionsSearchInputProps
 ) {
   return (

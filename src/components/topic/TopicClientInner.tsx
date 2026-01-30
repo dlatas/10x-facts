@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Heart, Pencil, X } from 'lucide-react';
@@ -48,12 +48,12 @@ export function TopicClientInner(props: { topicId: string }) {
 
   const url = useTopicUrlState({ debounceMs: 300 });
 
-  const topicsService = React.useMemo(() => createCollectionTopicsViewService(), []);
-  const flashcardsService = React.useMemo(() => createTopicFlashcardsViewService(), []);
-  const aiService = React.useMemo(() => createAiViewService(), []);
+  const topicsService = useMemo(() => createCollectionTopicsViewService(), []);
+  const flashcardsService = useMemo(() => createTopicFlashcardsViewService(), []);
+  const aiService = useMemo(() => createAiViewService(), []);
 
-  const [descriptionOpen, setDescriptionOpen] = React.useState(false);
-  const [descriptionStatus, setDescriptionStatus] = React.useState<
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
+  const [descriptionStatus, setDescriptionStatus] = useState<
     'idle' | 'saving' | 'saved' | 'error'
   >('idle');
   const descriptionForm = useForm<z.infer<typeof updateTopicDescriptionCommandSchema>>({
@@ -61,32 +61,32 @@ export function TopicClientInner(props: { topicId: string }) {
     defaultValues: { description: '' },
   });
 
-  const [createOpen, setCreateOpen] = React.useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const createForm = useForm<z.infer<typeof createFlashcardCommandSchema>>({
     resolver: zodResolver(createFlashcardCommandSchema),
     defaultValues: { front: '', back: '' },
   });
 
-  const [editOpen, setEditOpen] = React.useState(false);
-  const [editTarget, setEditTarget] = React.useState<FlashcardItemVm | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<FlashcardItemVm | null>(null);
   const editForm = useForm<z.infer<typeof createFlashcardCommandSchema>>({
     resolver: zodResolver(createFlashcardCommandSchema),
     defaultValues: { front: '', back: '' },
   });
 
-  const [deleteOpen, setDeleteOpen] = React.useState(false);
-  const [deleteTarget, setDeleteTarget] = React.useState<FlashcardItemVm | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<FlashcardItemVm | null>(null);
 
-  const [previewOpen, setPreviewOpen] = React.useState(false);
-  const [previewTarget, setPreviewTarget] = React.useState<FlashcardItemVm | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewTarget, setPreviewTarget] = useState<FlashcardItemVm | null>(null);
 
-  const [aiOpen, setAiOpen] = React.useState(false);
-  const [aiProposal, setAiProposal] = React.useState<{ front: string; back: string } | null>(
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiProposal, setAiProposal] = useState<{ front: string; back: string } | null>(
     null
   );
-  const [aiIsRandom, setAiIsRandom] = React.useState(false);
-  const [aiRandomDomainLabel, setAiRandomDomainLabel] = React.useState<string | null>(null);
-  const [aiLimit, setAiLimit] = React.useState<{ remaining: number; reset_at_utc: string } | null>(
+  const [aiIsRandom, setAiIsRandom] = useState(false);
+  const [aiRandomDomainLabel, setAiRandomDomainLabel] = useState<string | null>(null);
+  const [aiLimit, setAiLimit] = useState<{ remaining: number; reset_at_utc: string } | null>(
     null
   );
 
@@ -99,8 +99,6 @@ export function TopicClientInner(props: { topicId: string }) {
       },
     ],
     queryFn: async (): Promise<TopicHeaderVm | null> => {
-      // Brak GET /api/v1/topics/:topicId. Jeśli mamy fromCollectionId,
-      // pobieramy listę tematów w tej kolekcji i wyszukujemy po id.
       const fallbackName = url.context.topicNameFromUrl ?? 'Temat';
 
       if (!url.context.fromCollectionId) {
@@ -123,7 +121,6 @@ export function TopicClientInner(props: { topicId: string }) {
       });
       const found = (json.items ?? []).find((t) => t.id === props.topicId);
       if (!found) {
-        // jeśli topicId nie jest w tej kolekcji (albo brak dostępu) – traktuj jak 404 kontekstu
         throw new TopicsHttpError(404, 'Nie znaleziono tematu w kolekcji.');
       }
       return mapTopicDtoToVm(found);
@@ -131,11 +128,9 @@ export function TopicClientInner(props: { topicId: string }) {
     retry: false,
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!topicQuery.data) return;
-    // inicjalizacja draftu opisu po załadowaniu tematu
     const raw = topicQuery.data.description ?? '';
-    // legacy fallback: kiedyś DB miało default "example description."
     const cleaned =
       raw.trim().toLowerCase() === 'example description.' ? '' : raw;
     descriptionForm.reset({ description: cleaned });
@@ -164,7 +159,7 @@ export function TopicClientInner(props: { topicId: string }) {
     retry: false,
   });
 
-  const items = React.useMemo(() => {
+  const items = useMemo(() => {
     const dto = flashcardsQuery.data?.items ?? [];
     return dto.map(mapFlashcardDtoToVm);
   }, [flashcardsQuery.data?.items]);
@@ -184,7 +179,6 @@ export function TopicClientInner(props: { topicId: string }) {
     onSuccess: () => {
       setDescriptionStatus('saved');
       toast.success('Zapisano opis tematu.');
-      // odśwież dane tematu (jeśli pochodzą z kolekcji)
       void queryClient.invalidateQueries({ queryKey: TOPIC_QUERY_KEY });
     },
     onError: (e) => {
@@ -315,7 +309,6 @@ export function TopicClientInner(props: { topicId: string }) {
       setAiProposal(res.proposal);
       setAiOpen(true);
 
-      // Konfetti w momencie, gdy wygenerowana fiszka pojawia się w UI (modal z propozycją).
       if (typeof window !== 'undefined') {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -400,8 +393,7 @@ export function TopicClientInner(props: { topicId: string }) {
     },
   });
 
-  // Map errors -> redirect where appropriate
-  React.useEffect(() => {
+  useEffect(() => {
     if (!topicQuery.isError) return;
     const err = topicQuery.error;
     if (err instanceof TopicsHttpError) {
@@ -410,7 +402,7 @@ export function TopicClientInner(props: { topicId: string }) {
     }
   }, [topicQuery.error, topicQuery.isError]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!flashcardsQuery.isError) return;
     const err = flashcardsQuery.error;
     if (err instanceof FlashcardsHttpError) {
@@ -427,7 +419,6 @@ export function TopicClientInner(props: { topicId: string }) {
     url.context.topicNameFromUrl?.trim().toLowerCase() === 'temat losowy';
 
   const topicDescriptionRaw = topicQuery.data?.description ?? '';
-  // legacy fallback: kiedyś DB miało default "example description."
   const topicDescriptionCleaned =
     topicDescriptionRaw.trim().toLowerCase() === 'example description.'
       ? ''
@@ -440,7 +431,7 @@ export function TopicClientInner(props: { topicId: string }) {
     ? 'Opis tematu jest wymagany, aby móc wygenerować fiszkę'
     : undefined;
 
-  const onAiGenerateClick = React.useCallback(async () => {
+  const onAiGenerateClick = useCallback(async () => {
     if (isAiBlockedByMissingDescription) {
       toast.error('Opis tematu jest wymagany, aby móc wygenerować fiszkę');
       return;
@@ -462,24 +453,24 @@ export function TopicClientInner(props: { topicId: string }) {
         })()
       : '/collections';
 
-  const openEdit = React.useCallback((item: FlashcardItemVm) => {
+  const openEdit = useCallback((item: FlashcardItemVm) => {
     setEditTarget(item);
     editForm.reset({ front: item.front, back: item.back });
     editForm.clearErrors();
     setEditOpen(true);
   }, [editForm]);
 
-  const openDelete = React.useCallback((item: FlashcardItemVm) => {
+  const openDelete = useCallback((item: FlashcardItemVm) => {
     setDeleteTarget(item);
     setDeleteOpen(true);
   }, []);
 
-  const openPreview = React.useCallback((item: FlashcardItemVm) => {
+  const openPreview = useCallback((item: FlashcardItemVm) => {
     setPreviewTarget(item);
     setPreviewOpen(true);
   }, []);
 
-  const toggleFavorite = React.useCallback(
+  const toggleFavorite = useCallback(
     async (item: FlashcardItemVm) => {
       await updateFlashcardMutation.mutateAsync({
         id: item.id,
@@ -510,19 +501,18 @@ export function TopicClientInner(props: { topicId: string }) {
     });
   });
 
-  const confirmDelete = React.useCallback(async () => {
+  const confirmDelete = useCallback(async () => {
     if (!deleteTarget) return;
     await deleteFlashcardMutation.mutateAsync(deleteTarget.id);
   }, [deleteFlashcardMutation, deleteTarget]);
 
-  const closeAiModal = React.useCallback(async () => {
+  const closeAiModal = useCallback(async () => {
     setAiOpen(false);
     setAiProposal(null);
-    // best-effort: log skip
     try {
       await aiSkipMutation.mutateAsync();
     } catch {
-      // ignore
+      console.error('Failed to skip AI generation');
     }
   }, [aiSkipMutation]);
 
@@ -757,7 +747,6 @@ export function TopicClientInner(props: { topicId: string }) {
         )}
       </div>
 
-      {/* Modal: podgląd fiszki */}
       <FlashcardPreviewDialog
         open={previewOpen && !!previewTarget}
         flashcard={previewTarget ? { front: previewTarget.front, back: previewTarget.back } : null}
@@ -767,7 +756,6 @@ export function TopicClientInner(props: { topicId: string }) {
         }}
       />
 
-      {/* Modal: opis tematu (niedostępny dla tematu losowego) */}
       {!isRandomTopic ? (
         <TopicDescriptionDialog
           open={descriptionOpen}
@@ -789,7 +777,6 @@ export function TopicClientInner(props: { topicId: string }) {
         />
       ) : null}
 
-      {/* Modal: dodaj fiszkę */}
       <CreateFlashcardDialog
         open={createOpen}
         onOpenChange={(open) => {
@@ -801,7 +788,6 @@ export function TopicClientInner(props: { topicId: string }) {
         onSubmit={(e) => void submitCreate(e)}
       />
 
-      {/* Modal: edytuj fiszkę */}
       <EditFlashcardDialog
         open={editOpen}
         onOpenChange={(open) => {
@@ -816,7 +802,6 @@ export function TopicClientInner(props: { topicId: string }) {
         onSubmit={(e) => void submitEdit(e)}
       />
 
-      {/* Confirm: usuń fiszkę */}
       <DeleteFlashcardConfirmDialog
         open={deleteOpen}
         flashcardFront={deleteTarget?.front ?? null}
@@ -825,7 +810,6 @@ export function TopicClientInner(props: { topicId: string }) {
         onConfirm={() => void confirmDelete()}
       />
 
-      {/* Modal: AI preview */}
       <AiProposalDialog
         open={aiOpen}
         proposal={aiProposal}

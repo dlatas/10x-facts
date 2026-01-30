@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { memo } from 'react';
 
 import type { DeleteTopicConfirmDialogProps } from '@/components/collection-topics/collection-topics.types';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-export const DeleteTopicConfirmDialog = React.memo(function DeleteTopicConfirmDialog(
+export const DeleteTopicConfirmDialog = memo(function DeleteTopicConfirmDialog(
   props: DeleteTopicConfirmDialogProps
 ) {
   return (

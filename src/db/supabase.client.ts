@@ -64,14 +64,9 @@ export function createSupabaseClient(options?: {
   });
 }
 
-/**
- * Admin client (service role) – omija RLS.
- * Używaj TYLKO po stronie serwera i tylko po manualnej weryfikacji właściciela rekordu.
- */
 export function createSupabaseAdminClient(): SupabaseClient | null {
   if (!supabaseServiceRoleKey) return null;
   return createClient<Database>(supabaseUrl, supabaseServiceRoleKey);
 }
 
-// Default client (anon / without user auth). Prefer request-scoped client via middleware for RLS.
 export const supabaseClient = createSupabaseClient();

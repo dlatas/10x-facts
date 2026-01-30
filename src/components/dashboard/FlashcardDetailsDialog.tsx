@@ -13,7 +13,6 @@ export function FlashcardDetailsDialog(props: {
 }) {
   const { isOpen, onClose, flashcard } = props;
 
-  // Guard: dialog może być otwarty tylko jeśli mamy fiszkę.
   const open = isOpen && !!flashcard;
 
   return (

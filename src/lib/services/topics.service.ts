@@ -58,10 +58,6 @@ export async function ensureRandomTopicForCollection(args: {
 
   if (error) throw error;
   if (data?.id) {
-    // W DB unikalność `system_key` jest per-user (partial unique index),
-    // więc temat systemowy może istnieć tylko raz na użytkownika.
-    // Jeśli z jakiegoś powodu jest przypięty do innej kolekcji, nie próbujemy
-    // tego naprawiać (pola są immutable w MVP) — tylko logujemy i kończymy.
     if (data.collection_id !== args.collectionId) {
       console.error(
         '[ensureRandomTopicForCollection] random_topic in other collection',
@@ -220,8 +216,6 @@ export async function deleteTopic(args: {
     throw new TopicsServiceError('topic_not_found', 'Nie znaleziono tematu.');
   }
 
-  // W DB usuwanie tematów systemowych jest blokowane triggerem (old.system_key is not null).
-  // Dla spójnego API mapujemy to na 403 po stronie aplikacji.
   if (existing.system_key) {
     throw new TopicsServiceError(
       'forbidden_system',

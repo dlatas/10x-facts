@@ -2,11 +2,9 @@ import type { TablesInsert, TablesUpdate } from '@/db/database.types';
 import type { ListResponse, OkResponse, SortOrder } from '@/types/common';
 import type { Flashcard } from '@/types/entities';
 
-// API exposes these enums; intersect with DB string fields for consistency.
 export type FlashcardSource = Flashcard['source'] &
   ('manually_created' | 'auto_generated');
 
-// Flashcards
 export type FlashcardDto = Pick<
   Flashcard,
   | 'id'

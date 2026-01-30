@@ -1,12 +1,9 @@
-import * as React from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { TopicNavContext } from './topic.types';
 
 export interface TopicUrlState {
-  // search
   q: string;
-
-  // nav context
   context: TopicNavContext;
 }
 
@@ -44,7 +41,6 @@ function writeUrlState(next: Pick<TopicUrlState, 'q'>): void {
   if (typeof window === 'undefined') return;
   const url = new URL(window.location.href);
 
-  // q
   if (next.q && next.q.trim()) url.searchParams.set('q', next.q);
   else url.searchParams.delete('q');
 
@@ -54,20 +50,19 @@ function writeUrlState(next: Pick<TopicUrlState, 'q'>): void {
 export function useTopicUrlState(args?: { debounceMs?: number }) {
   const debounceMs = args?.debounceMs ?? 300;
 
-  const initial = React.useMemo(() => readUrlState(), []);
+  const initial = useMemo(() => readUrlState(), []);
 
-  // draft (input) + committed (query key)
-  const [qDraft, setQDraft] = React.useState('');
-  const [qCommitted, setQCommitted] = React.useState('');
+  const [qDraft, setQDraft] = useState('');
+  const [qCommitted, setQCommitted] = useState('');
 
-  const debounceRef = React.useRef<number | null>(null);
+  const debounceRef = useRef<number | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setQDraft(initial.q);
     setQCommitted(initial.q);
   }, [initial.q]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window === 'undefined') return;
 
     if (debounceRef.current != null) {
@@ -84,7 +79,7 @@ export function useTopicUrlState(args?: { debounceMs?: number }) {
     return () => window.clearTimeout(handle);
   }, [debounceMs, qDraft]);
 
-  const commitNow = React.useCallback(() => {
+  const commitNow = useCallback(() => {
     if (typeof window === 'undefined') return;
     if (debounceRef.current != null) {
       window.clearTimeout(debounceRef.current);
@@ -95,10 +90,7 @@ export function useTopicUrlState(args?: { debounceMs?: number }) {
   }, [qDraft]);
 
   return {
-    // nav context (read-only)
     context: initial.context,
-
-    // filters
     qDraft,
     setQDraft,
     qCommitted,

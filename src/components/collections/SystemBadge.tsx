@@ -1,10 +1,10 @@
-import * as React from 'react';
+import { memo } from 'react';
 
 export interface SystemBadgeProps {
   systemKey: string;
 }
 
-export const SystemBadge = React.memo(function SystemBadge(props: SystemBadgeProps) {
+export const SystemBadge = memo(function SystemBadge(props: SystemBadgeProps) {
   const label =
     props.systemKey === 'random_collection' ? 'Kolekcja losowa' : 'Systemowa';
 

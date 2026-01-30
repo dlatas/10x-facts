@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { memo } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -19,7 +19,7 @@ export interface DeleteCollectionConfirmDialogProps {
   isDeleting: boolean;
 }
 
-export const DeleteCollectionConfirmDialog = React.memo(
+export const DeleteCollectionConfirmDialog = memo(
   function DeleteCollectionConfirmDialog(props: DeleteCollectionConfirmDialogProps) {
     return (
       <Dialog

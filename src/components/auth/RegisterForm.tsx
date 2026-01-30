@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
@@ -20,19 +20,19 @@ import { authSignupFormSchema } from '@/lib/validation/auth.schemas';
 export function RegisterForm(props: { next?: string | null }) {
   const next = props.next ?? null;
   const safeNext = getSafeNextPath(next);
-  const auth = React.useMemo(() => createAuthService(), []);
+  const auth = useMemo(() => createAuthService(), []);
 
-  const emailId = React.useId();
-  const passwordId = React.useId();
-  const confirmId = React.useId();
+  const emailId = useId();
+  const passwordId = useId();
+  const confirmId = useId();
 
-  const [success, setSuccess] = React.useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const form = useForm<z.infer<typeof authSignupFormSchema>>({
     resolver: zodResolver(authSignupFormSchema),
     defaultValues: { email: '', password: '', confirmPassword: '' },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     const t = window.setTimeout(() => form.setFocus('email'), 0);
     return () => window.clearTimeout(t);
   }, [form]);

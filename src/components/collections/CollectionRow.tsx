@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { memo } from 'react';
 import { X } from 'lucide-react';
 
 import type { CollectionsListItemVm } from '@/components/hooks/useCollectionsView';
@@ -11,7 +11,7 @@ export interface CollectionRowProps {
   onDeleteRequest: (item: CollectionsListItemVm) => void;
 }
 
-export const CollectionRow = React.memo(function CollectionRow(props: CollectionRowProps) {
+export const CollectionRow = memo(function CollectionRow(props: CollectionRowProps) {
   const canDelete = !props.item.isSystem;
   const topicsHref = `/collections/${encodeURIComponent(props.item.id)}/topics?collectionName=${encodeURIComponent(props.item.name)}`;
 

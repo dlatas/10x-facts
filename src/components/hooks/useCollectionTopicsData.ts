@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
   CreateTopicCommand,
@@ -15,37 +15,30 @@ import {
 export type CollectionTopicsStatus = 'loading' | 'error' | 'ready';
 
 export interface UseCollectionTopicsDataResult {
-  // data
   items: TopicDto[];
   total: number;
 
-  // list state
   status: CollectionTopicsStatus;
   errorMessage: string | null;
   retry: () => void;
 
-  // URL-driven search
   queryDraft: string;
   setQueryDraft: (q: string) => void;
   commitQueryNow: () => void;
   committedQuery: string;
 
-  // navigation context
   collectionName: string | null;
 
-  // create
   isCreating: boolean;
   createError: string | null;
   submitCreate: (name: string) => Promise<TopicDto | null>;
 
-  // delete
   isDeleting: boolean;
   deleteError: string | null;
   submitDelete: (
     topic: Pick<TopicDto, 'id' | 'system_key'>
   ) => Promise<{ ok: boolean; errorMessage: string | null }>;
 
-  // refresh
   refreshTopics: () => Promise<void>;
 }
 
@@ -89,40 +82,34 @@ export function useCollectionTopicsData(args: {
   const debounceMs = args.debounceMs ?? 350;
   const limit = args.defaultLimit ?? 50;
 
-  const initialUrl = React.useMemo(() => readUrlState(), []);
+  const initialUrl = useMemo(() => readUrlState(), []);
 
-  const service = React.useMemo(() => createCollectionTopicsViewService(), []);
+  const service = useMemo(() => createCollectionTopicsViewService(), []);
 
-  // URL-driven search: draft (input) + committed (query)
-  const [queryDraft, setQueryDraft] = React.useState('');
-  const [committedQuery, setCommittedQuery] = React.useState('');
-  const debounceRef = React.useRef<number | null>(null);
+  const [queryDraft, setQueryDraft] = useState('');
+  const [committedQuery, setCommittedQuery] = useState('');
+  const debounceRef = useRef<number | null>(null);
 
-  // data + list state
-  const [items, setItems] = React.useState<TopicDto[]>([]);
-  const [total, setTotal] = React.useState(0);
-  const [status, setStatus] = React.useState<CollectionTopicsStatus>('loading');
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [items, setItems] = useState<TopicDto[]>([]);
+  const [total, setTotal] = useState(0);
+  const [status, setStatus] = useState<CollectionTopicsStatus>('loading');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // navigation context (read-once)
   const collectionName = initialUrl.collectionName;
 
-  // create/delete state
-  const [isCreating, setIsCreating] = React.useState(false);
-  const [createError, setCreateError] = React.useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
-  const [isDeleting, setIsDeleting] = React.useState(false);
-  const [deleteError, setDeleteError] = React.useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // init from URL
-  React.useEffect(() => {
+  useEffect(() => {
     const { q } = readUrlState();
     setQueryDraft(q);
     setCommittedQuery(q);
   }, []);
 
-  // debounce URL sync + query commit
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window === 'undefined') return;
 
     if (debounceRef.current != null) {
@@ -138,7 +125,7 @@ export function useCollectionTopicsData(args: {
     return () => window.clearTimeout(handle);
   }, [debounceMs, queryDraft]);
 
-  const commitQueryNow = React.useCallback(() => {
+  const commitQueryNow = useCallback(() => {
     if (typeof window === 'undefined') return;
     if (debounceRef.current != null) {
       window.clearTimeout(debounceRef.current);
@@ -148,7 +135,7 @@ export function useCollectionTopicsData(args: {
     writeQueryToUrl(queryDraft);
   }, [queryDraft]);
 
-  const refreshTopics = React.useCallback(async () => {
+  const refreshTopics = useCallback(async () => {
     setStatus('loading');
     setErrorMessage(null);
 
@@ -189,7 +176,7 @@ export function useCollectionTopicsData(args: {
     }
   }, [args.collectionId, committedQuery, limit, service]);
 
-  const submitCreate = React.useCallback(
+  const submitCreate = useCallback(
     async (name: string): Promise<TopicDto | null> => {
       const trimmed = name?.trim?.() ?? '';
       if (!trimmed) {
@@ -238,7 +225,7 @@ export function useCollectionTopicsData(args: {
     [args.collectionId, refreshTopics, service]
   );
 
-  const submitDelete = React.useCallback(
+  const submitDelete = useCallback(
     async (
       topic: Pick<TopicDto, 'id' | 'system_key'>
     ): Promise<{ ok: boolean; errorMessage: string | null }> => {
@@ -287,11 +274,11 @@ export function useCollectionTopicsData(args: {
     [refreshTopics, service]
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     void refreshTopics();
   }, [refreshTopics]);
 
-  const retry = React.useCallback(() => {
+  const retry = useCallback(() => {
     if (status === 'error') void refreshTopics();
   }, [refreshTopics, status]);
 

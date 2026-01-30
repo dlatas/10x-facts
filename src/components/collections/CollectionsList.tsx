@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { memo } from 'react';
 
 import type { CollectionsListItemVm } from '@/components/hooks/useCollectionsView';
 import { CollectionRow } from '@/components/collections/CollectionRow';
@@ -8,7 +8,7 @@ export interface CollectionsListProps {
   onDeleteRequest: (item: CollectionsListItemVm) => void;
 }
 
-export const CollectionsList = React.memo(function CollectionsList(
+export const CollectionsList = memo(function CollectionsList(
   props: CollectionsListProps
 ) {
   return (

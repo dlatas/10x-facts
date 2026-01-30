@@ -2,6 +2,25 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { getBearerToken, jsonError, requireUserId } from '@/lib/http/api';
 
+type SupabaseGetUserResult =
+  | { data: { user: { id: string } }; error: null }
+  | { data: { user: null }; error: Error };
+
+interface MinimalApiContext {
+  request: Request;
+  locals: {
+    supabase: {
+      auth: {
+        getUser: (token?: string) => Promise<SupabaseGetUserResult>;
+      };
+    };
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object';
+}
+
 describe('lib/http/api', () => {
   describe('getBearerToken', () => {
     it('returns null when header missing', () => {
@@ -46,7 +65,7 @@ describe('lib/http/api', () => {
       expect(res.status).toBe(400);
       expect(res.headers.get('Content-Type')).toContain('application/json');
 
-      const body = (await res.json()) as any;
+      const body: unknown = await res.json();
       expect(body).toEqual({
         error: {
           message: 'Query nie przechodzi walidacji.',
@@ -63,7 +82,7 @@ describe('lib/http/api', () => {
         error: null,
       });
 
-      const context: any = {
+      const context: MinimalApiContext = {
         request: new Request('http://example.com', {
           headers: { authorization: 'Bearer token123' },
         }),
@@ -83,7 +102,7 @@ describe('lib/http/api', () => {
         error: new Error('invalid token'),
       });
 
-      const context: any = {
+      const context: MinimalApiContext = {
         request: new Request('http://example.com', {
           headers: { authorization: 'Bearer bad' },
         }),
@@ -94,8 +113,9 @@ describe('lib/http/api', () => {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.response.status).toBe(401);
-        const json = (await result.response.json()) as any;
-        expect(json?.error?.message).toBe('Nieprawidłowy lub wygasły token.');
+        const json: unknown = await result.response.json();
+        const msg = isRecord(json) && isRecord(json.error) ? json.error.message : null;
+        expect(msg).toBe('Nieprawidłowy lub wygasły token.');
       }
     });
 
@@ -105,7 +125,7 @@ describe('lib/http/api', () => {
         error: null,
       });
 
-      const context: any = {
+      const context: MinimalApiContext = {
         request: new Request('http://example.com'),
         locals: { supabase: { auth: { getUser } } },
       };
@@ -121,7 +141,7 @@ describe('lib/http/api', () => {
         error: new Error('no session'),
       });
 
-      const context: any = {
+      const context: MinimalApiContext = {
         request: new Request('http://example.com'),
         locals: { supabase: { auth: { getUser } } },
       };
@@ -130,8 +150,9 @@ describe('lib/http/api', () => {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.response.status).toBe(401);
-        const json = (await result.response.json()) as any;
-        expect(json?.error?.message).toBe('Brak aktywnej sesji.');
+        const json: unknown = await result.response.json();
+        const msg = isRecord(json) && isRecord(json.error) ? json.error.message : null;
+        expect(msg).toBe('Brak aktywnej sesji.');
       }
     });
   });

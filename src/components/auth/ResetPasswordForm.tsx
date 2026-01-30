@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useEffect, useId, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
@@ -17,16 +17,16 @@ import { createAuthService } from '@/lib/services/auth.service';
 import { authResetPasswordFormSchema } from '@/lib/validation/auth.schemas';
 
 export function ResetPasswordForm() {
-  const auth = React.useMemo(() => createAuthService(), []);
+  const auth = useMemo(() => createAuthService(), []);
 
-  const passwordId = React.useId();
-  const confirmId = React.useId();
+  const passwordId = useId();
+  const confirmId = useId();
   const form = useForm<z.infer<typeof authResetPasswordFormSchema>>({
     resolver: zodResolver(authResetPasswordFormSchema),
     defaultValues: { password: '', confirmPassword: '' },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     const t = window.setTimeout(() => form.setFocus('password'), 0);
     return () => window.clearTimeout(t);
   }, [form]);

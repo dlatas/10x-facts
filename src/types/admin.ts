@@ -1,9 +1,7 @@
 import type { AiGenerationEvent, Flashcard } from '@/types/entities';
 
-// Branded count keeps a relation to the source entity type.
 type CountOf<TEntity> = number & { __countOf?: TEntity };
 
-// Admin metrics
 export interface AdminMetricsSummaryResponseDto {
   accept_rate: number;
   ai_share: number;
