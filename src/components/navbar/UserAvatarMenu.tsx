@@ -13,7 +13,7 @@ import { redirectToLogin } from '@/lib/http/redirect';
 import { createAuthService } from '@/lib/services/auth.service';
 
 export function UserAvatarMenu(props: { email?: string | null }) {
-  const email = props.email ?? null;
+  const email = props.email?.trim() ? props.email.trim() : null;
   const letter = (email?.trim()?.[0] ?? 'U').toUpperCase();
   const auth = useMemo(() => createAuthService(), []);
   const [isLoading, setIsLoading] = useState(false);

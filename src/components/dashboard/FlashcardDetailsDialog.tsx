@@ -44,7 +44,9 @@ export function FlashcardDetailsDialog(props: {
                 <DialogCloseButton />
               </div>
 
-              <DialogTitle className="mt-3 text-left">{flashcard?.front ?? ""}</DialogTitle>
+              <DialogTitle className="mt-3 text-left leading-normal">
+                {flashcard?.front ?? ""}
+              </DialogTitle>
               <DialogDescription className="whitespace-pre-wrap text-left">
                 {flashcard?.back ?? ""}
               </DialogDescription>
@@ -52,7 +54,7 @@ export function FlashcardDetailsDialog(props: {
           ) : (
             <>
               <div className="flex items-start justify-between gap-3">
-                <DialogTitle className="min-w-0 flex-1 text-left">
+                <DialogTitle className="min-w-0 flex-1 text-left leading-normal">
                   {flashcard?.front ?? ""}
                 </DialogTitle>
                 <DialogCloseButton />

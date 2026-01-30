@@ -29,14 +29,14 @@ export function CreateFlashcardDialog(props: {
             <DialogCloseButton />
           </div>
           <DialogDescription className="text-left">
-            Tworzenie manualne. Front ≤ 200, back ≤ 600.
+            Tworzenie manualne. Tytuł ≤ 200, opis ≤ 600.
           </DialogDescription>
         </DialogHeader>
 
         <form className="space-y-3" onSubmit={props.onSubmit} noValidate>
           <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="create-front">
-              Front
+              Tytuł
             </label>
             <Input
               id="create-front"
@@ -56,7 +56,7 @@ export function CreateFlashcardDialog(props: {
 
           <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="create-back">
-              Back
+              Opis
             </label>
             <textarea
               id="create-back"

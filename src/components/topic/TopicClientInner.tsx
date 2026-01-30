@@ -513,7 +513,7 @@ export function TopicClientInner(props: { topicId: string }) {
     try {
       await aiSkipMutation.mutateAsync();
     } catch {
-      console.error('Failed to skip AI generation');
+      // Intentionally ignore (best-effort cleanup)
     }
   }, [aiSkipMutation]);
 
@@ -526,7 +526,7 @@ export function TopicClientInner(props: { topicId: string }) {
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-semibold tracking-tight md:text-2xl">
+            <h1 className="break-words text-lg font-semibold leading-snug tracking-tight sm:text-xl md:text-2xl">
               {topicName}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -538,7 +538,7 @@ export function TopicClientInner(props: { topicId: string }) {
           {!isRandomTopic ? (
             <Button
               type="button"
-              variant="outline"
+              variant="default"
               onClick={() => {
                 setDescriptionStatus('idle');
                 setDescriptionOpen(true);
@@ -558,7 +558,7 @@ export function TopicClientInner(props: { topicId: string }) {
           onKeyDown={(e) => {
             if (e.key === 'Enter') url.commitNow();
           }}
-          placeholder="Szukaj w front/back…"
+          placeholder="Szukaj w tytule/opisie…"
           aria-label="Szukaj fiszek"
         />
 
@@ -616,10 +616,10 @@ export function TopicClientInner(props: { topicId: string }) {
               <p className="mt-1 text-sm text-muted-foreground">
                 {url.qDraft
                   ? 'Brak fiszek spełniających kryteria wyszukiwania.'
-                  : 'Dodaj pierwszą fiszkę manualnie lub wygeneruj ją przez AI.'}
+                  : 'W tym temacie nie ma jeszcze fiszek.'}
               </p>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                {url.qDraft ? (
+              {url.qDraft ? (
+                <div className="mt-4">
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -629,29 +629,7 @@ export function TopicClientInner(props: { topicId: string }) {
                   >
                     Wyczyść wyszukiwanie
                   </Button>
-                ) : (
-                  <>
-                    <Button variant="secondary" onClick={() => setCreateOpen(true)}>
-                      Dodaj fiszkę
-                    </Button>
-                    <span className="inline-block" title={aiBlockedTooltip}>
-                      <Button
-                        onClick={() => void onAiGenerateClick()}
-                        disabled={
-                          aiGenerateMutation.isPending ||
-                          isAiBlockedByMissingDescription
-                        }
-                      >
-                        Generuj AI
-                      </Button>
-                    </span>
-                  </>
-                )}
-              </div>
-              {isAiBlockedByMissingDescription ? (
-                <p className="mt-2 text-xs text-destructive sm:hidden">
-                  * {aiBlockedTooltip}
-                </p>
+                </div>
               ) : null}
             </CardContent>
           </Card>
@@ -673,24 +651,82 @@ export function TopicClientInner(props: { topicId: string }) {
                 aria-label={`Otwórz fiszkę: ${f.front}`}
               >
                 <CardContent className="p-4">
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="min-w-0 truncate font-medium">{f.front}</p>
+                  <div className="gap-3 sm:flex sm:items-start sm:justify-between">
+                    <div className="min-w-0 flex-1">
+                      {/* Mobile: float actions so Back text can wrap around them */}
+                      <div className="float-right ml-3 flex flex-col items-center gap-1.5 sm:hidden">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openDelete(f);
+                          }}
+                          aria-label="Usuń fiszkę"
+                          title="Usuń fiszkę"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
 
-                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                          <span className="rounded-full border px-2 py-0.5">
-                            {f.source === 'manually_created' ? 'manual' : 'ai'}
-                          </span>
-                          {f.editedByUser ? (
-                            <span className="rounded-full border px-2 py-0.5">
-                              edytowana
-                            </span>
-                          ) : null}
-                        </div>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEdit(f);
+                          }}
+                          aria-label="Edytuj fiszkę"
+                          title="Edytuj fiszkę"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          disabled={updateFlashcardMutation.isPending}
+                          size="icon"
+                          className="h-8 w-8"
+                          aria-label={
+                            f.isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'
+                          }
+                          aria-pressed={f.isFavorite}
+                          title={
+                            f.isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'
+                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void toggleFavorite(f);
+                          }}
+                        >
+                          <Heart
+                            className={
+                              f.isFavorite
+                                ? 'h-4 w-4 fill-red-500 text-red-500'
+                                : 'h-4 w-4 fill-transparent text-muted-foreground'
+                            }
+                          />
+                        </Button>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <p className="min-w-0 break-words font-medium">{f.front}</p>
+
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <span className="rounded-full border px-2 py-0.5">
+                          {f.source === 'manually_created' ? 'manual' : 'ai'}
+                        </span>
+                        {f.editedByUser ? (
+                          <span className="rounded-full border px-2 py-0.5">edytowana</span>
+                        ) : null}
+                      </div>
+
+                      <p className="mt-4 line-clamp-6 whitespace-pre-wrap text-sm leading-snug text-muted-foreground">
+                        {f.back}
+                      </p>
+                    </div>
+
+                    <div className="hidden items-center gap-2 sm:flex">
                         <Button
                           variant="outline"
                           disabled={updateFlashcardMutation.isPending}
@@ -742,13 +778,6 @@ export function TopicClientInner(props: { topicId: string }) {
                         >
                           <X />
                         </Button>
-                      </div>
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className="mt-1 line-clamp-2 text-sm leading-snug text-muted-foreground">
-                        {f.back}
-                      </p>
                     </div>
                   </div>
                 </CardContent>

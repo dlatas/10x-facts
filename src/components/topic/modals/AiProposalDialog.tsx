@@ -32,7 +32,7 @@ export function AiProposalDialog(props: {
     >
       <DialogContent
         hideClose
-        className="max-h-[85vh] w-[calc(100%-2rem)] overflow-y-auto px-4 py-5 sm:max-w-2xl sm:px-6 sm:py-6 md:max-w-3xl"
+        className="max-h-[70svh] w-[calc(100%-2rem)] overflow-y-auto px-4 py-5 sm:max-h-[85vh] sm:max-w-2xl sm:px-6 sm:py-6 md:max-w-3xl"
       >
         <DialogHeader className="text-left">
           <div className="flex items-start justify-between gap-3">
@@ -42,8 +42,7 @@ export function AiProposalDialog(props: {
           <DialogDescription className="text-left">
             {props.limit ? (
               <span>
-                Pozostałe decyzje: <strong>{props.limit.remaining}</strong> (reset:{' '}
-                {props.limit.reset_at_utc})
+                Pozostałe tokeny: <strong>{props.limit.remaining}</strong> <br/>Reset nastąpi o północy czasu UTC.
               </span>
             ) : (
               'Zapisz albo odrzuć propozycję.'
@@ -54,11 +53,11 @@ export function AiProposalDialog(props: {
         {props.proposal ? (
           <div className="space-y-3">
             <div className="rounded-md border p-3">
-              <p className="text-xs text-muted-foreground">Front</p>
+              <p className="text-xs text-muted-foreground">Tytuł</p>
               <p className="mt-1 font-medium">{props.proposal.front}</p>
             </div>
             <div className="rounded-md border p-3">
-              <p className="text-xs text-muted-foreground">Back</p>
+              <p className="text-xs text-muted-foreground">Opis</p>
               <p className="mt-1 text-sm">{props.proposal.back}</p>
             </div>
           </div>

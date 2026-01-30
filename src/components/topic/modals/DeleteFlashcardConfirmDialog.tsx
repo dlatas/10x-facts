@@ -29,7 +29,7 @@ export function DeleteFlashcardConfirmDialog(props: {
         </DialogHeader>
 
         <div className="rounded-md border bg-muted/30 p-3 text-sm">
-          <p className="text-muted-foreground">Front:</p>
+          <p className="text-muted-foreground">Tytuł:</p>
           <p className="font-medium">{props.flashcardFront ?? "—"}</p>
         </div>
 

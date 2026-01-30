@@ -15,12 +15,12 @@ function makeFlashcard(overrides?: Partial<FavoriteFlashcardDto>): FavoriteFlash
 }
 
 describe("FlashcardPreviewCard", () => {
-  it("renders front and truncates back preview to 10 words with ellipsis", () => {
+  it("renders front and back", () => {
     render(<FlashcardPreviewCard flashcard={makeFlashcard()} />);
 
     expect(screen.getByText("Front")).toBeInTheDocument();
     expect(
-      screen.getByText("one two three four five six seven eight nine ten…")
+      screen.getByText("one two three four five six seven eight nine ten eleven twelve")
     ).toBeInTheDocument();
   });
 

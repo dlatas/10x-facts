@@ -14,13 +14,13 @@ export const CollectionTopicsHeader = memo(function CollectionTopicsHeader(
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="truncate text-xl font-semibold tracking-tight md:text-2xl">
+          <h1 className="break-words text-lg font-semibold leading-snug tracking-tight sm:text-xl md:text-2xl">
             Tematy
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Kolekcja:{' '}
             {props.collectionName ? (
-              <span className="font-medium text-foreground">
+              <span className="break-words font-medium text-foreground">
                 {props.collectionName}
               </span>
             ) : (

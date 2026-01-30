@@ -105,7 +105,7 @@ function DialogTitle({ className, ...props }: ComponentPropsWithoutRef<typeof Di
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+      className={cn("text-lg font-semibold leading-normal tracking-tight", className)}
       {...props}
     />
   );

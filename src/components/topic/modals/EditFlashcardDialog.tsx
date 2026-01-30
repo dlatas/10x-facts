@@ -31,7 +31,7 @@ export function EditFlashcardDialog(props: {
         <form className="space-y-3" onSubmit={props.onSubmit} noValidate>
           <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="edit-front">
-              Front
+              Tytuł
             </label>
             <Input
               id="edit-front"
@@ -51,7 +51,7 @@ export function EditFlashcardDialog(props: {
 
           <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="edit-back">
-              Back
+              Opis
             </label>
             <textarea
               id="edit-back"

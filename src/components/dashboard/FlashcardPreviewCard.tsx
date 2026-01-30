@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback } from "react";
 import { Heart } from "lucide-react";
 
 import type { FavoriteFlashcardDto } from "@/types";
@@ -19,15 +19,6 @@ export const FlashcardPreviewCard = memo(function FlashcardPreviewCard(props: {
     onClick?.(flashcard);
   }, [flashcard, onClick]);
 
-  const backPreview = useMemo(() => {
-    const words = (flashcard.back ?? "")
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean);
-    if (words.length <= 10) return words.join(" ");
-    return `${words.slice(0, 10).join(" ")}…`;
-  }, [flashcard.back]);
-
   return (
     <Card
       role="button"
@@ -47,7 +38,7 @@ export const FlashcardPreviewCard = memo(function FlashcardPreviewCard(props: {
     >
       <CardHeader className="p-4 pb-2">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="line-clamp-2 leading-snug">{props.flashcard.front}</CardTitle>
+          <CardTitle className="leading-snug">{props.flashcard.front}</CardTitle>
           {props.onToggleFavorite ? (
             <Button
               variant="outline"
@@ -68,7 +59,9 @@ export const FlashcardPreviewCard = memo(function FlashcardPreviewCard(props: {
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-0">
-        <p className="text-sm text-muted-foreground">{backPreview}</p>
+        <p className="line-clamp-5 whitespace-pre-wrap text-sm text-muted-foreground">
+          {flashcard.back ?? ""}
+        </p>
       </CardContent>
     </Card>
   );
