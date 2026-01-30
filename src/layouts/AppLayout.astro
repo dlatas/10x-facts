@@ -1,7 +1,9 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
+import { MobileNav } from '@/components/navbar/MobileNav';
 import { UserAvatarMenu } from '@/components/navbar/UserAvatarMenu';
 import { Folder, Heart, LayoutGrid } from 'lucide-react';
+import { NAV_LINKS } from '@/components/navbar/nav-links';
 
 interface Props {
   title?: string;
@@ -12,6 +14,12 @@ const { title = 'Dashboard — 10x Facts' } = Astro.props;
 const pathname = Astro.url.pathname;
 const isActive = (href: string) =>
   pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
+
+const iconMap = {
+  dashboard: LayoutGrid,
+  collections: Folder,
+  favorites: Heart,
+} as const;
 ---
 
 <MainLayout title={title}>
@@ -40,53 +48,33 @@ const isActive = (href: string) =>
           <span class="text-base font-semibold tracking-tight">Facts</span>
         </a>
         <div class="flex items-center gap-4">
-          <nav class="flex items-center gap-1 text-sm">
-            <a
-              href="/dashboard"
-              class:list={[
-                'inline-flex items-center gap-2 rounded-full px-3 py-1.5 transition-colors',
-                isActive('/dashboard')
-                  ? 'bg-primary/10 text-foreground ring-1 ring-primary/20'
-                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-              ]}
-            >
-              <LayoutGrid
-                className="size-4"
-                aria-hidden="true"
-              />
-              Dashboard
-            </a>
-            <a
-              href="/collections"
-              class:list={[
-                'inline-flex items-center gap-2 rounded-full px-3 py-1.5 transition-colors',
-                isActive('/collections')
-                  ? 'bg-primary/10 text-foreground ring-1 ring-primary/20'
-                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-              ]}
-            >
-              <Folder
-                className="size-4"
-                aria-hidden="true"
-              />
-              Kolekcje
-            </a>
-
-            <a
-              href="/favorites"
-              class:list={[
-                'inline-flex items-center gap-2 rounded-full px-3 py-1.5 transition-colors',
-                isActive('/favorites')
-                  ? 'bg-primary/10 text-foreground ring-1 ring-primary/20'
-                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-              ]}
-            >
-              <Heart
-                className="size-4"
-                aria-hidden="true"
-              />
-              Ulubione
-            </a>
+          <MobileNav
+            client:load
+            pathname={pathname}
+          />
+          <nav class="hidden items-center gap-1 text-sm md:flex">
+            {
+              NAV_LINKS.map(({ id, href, label }) => {
+                const Icon = iconMap[id];
+                return (
+                  <a
+                    href={href}
+                    class:list={[
+                      'inline-flex items-center gap-2 rounded-full px-3 py-1.5 transition-colors',
+                      isActive(href)
+                        ? 'bg-primary/10 text-foreground ring-1 ring-primary/20'
+                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                    ]}
+                  >
+                    <Icon
+                      className="size-4"
+                      aria-hidden="true"
+                    />
+                    {label}
+                  </a>
+                );
+              })
+            }
           </nav>
           <UserAvatarMenu client:load />
         </div>
