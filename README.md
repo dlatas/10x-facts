@@ -46,6 +46,8 @@ Additional docs:
 - **Styling/UI**: Tailwind CSS 4, shadcn/ui, Radix UI primitives
 - **Backend**: Supabase (PostgreSQL + Auth + SDK)
 - **AI**: OpenRouter.ai (model gateway)
+- **Testing (unit/component)**: Vitest, React Testing Library, MSW
+- **Testing (E2E)**: Playwright
 - **CI/CD**: GitHub Actions
 - **Hosting**: DigitalOcean (Docker-based deployment)
 
@@ -157,6 +159,11 @@ From `package.json`:
 - **`npm run lint`**: run ESLint
 - **`npm run lint:fix`**: run ESLint with auto-fix
 - **`npm run format`**: format codebase using Prettier
+- **`npm run test:unit`**: run unit tests (Vitest)
+- **`npm run test:unit:watch`**: run unit tests in watch mode
+- **`npm run test:e2e`**: run E2E tests (Playwright)
+- **`npm run test:e2e:install`**: download Playwright browsers (first-time setup)
+- **`npm run test:e2e:report`**: open Playwright HTML report
 
 ## 6. Project scope
 
@@ -195,7 +202,7 @@ From `package.json`:
   - Strict search (no diacritics normalization, no typo tolerance)
 - **Admin metrics**
   - AI acceptance rate: \(accepts / (accepts + rejects)\), skips excluded
-  - AI vs manual share: \(auto\_generated / (auto\_generated + manually\_created)\)
+  - AI vs manual share: \(auto_generated / (auto_generated + manually_created)\)
 
 ### Out of scope (explicitly not in MVP)
 
@@ -219,4 +226,3 @@ Success metrics (as defined in PRD):
 ## 8. License
 
 **TBD.** No license file is currently provided in this repository.
-
