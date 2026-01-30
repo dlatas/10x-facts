@@ -12,6 +12,8 @@ export default defineConfig({
     output: "server",
     integrations: [react(), sitemap()],
     server: { port: 3000 },
+    // This app doesn't use `astro:assets` image transforms; disable the image endpoint on Cloudflare.
+    image: { service: { entrypoint: "astro/assets/services/noop" } },
     env: {
         schema: {
             // Supabase (server-side only in this app; do NOT expose secrets to the client)
@@ -51,5 +53,6 @@ export default defineConfig({
             },
         },
     },
-    adapter: cloudflare(),
+    // Cloudflare runtime does not support `sharp` (native).
+    adapter: cloudflare({ imageService: "passthrough" }),
 });
