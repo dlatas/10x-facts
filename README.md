@@ -9,10 +9,11 @@
 - [2. Project description](#2-project-description)
 - [3. Tech stack](#3-tech-stack)
 - [4. Getting started locally](#4-getting-started-locally)
-- [5. Available scripts](#5-available-scripts)
-- [6. Project scope](#6-project-scope)
-- [7. Project status](#7-project-status)
-- [8. License](#8-license)
+- [5. Testing](#5-testing)
+- [6. Available scripts](#6-available-scripts)
+- [7. Project scope](#7-project-scope)
+- [8. Project status](#8-project-status)
+- [9. License](#9-license)
 
 ## 1. Project name
 
@@ -49,7 +50,7 @@ Additional docs:
 - **Testing (unit/component)**: Vitest, React Testing Library, MSW
 - **Testing (E2E)**: Playwright
 - **CI/CD**: GitHub Actions
-- **Hosting**: DigitalOcean (Docker-based deployment)
+- **Hosting**: Cloudflare Pages (Astro app) + Cloudflare Functions (API endpoints)
 
 ## Project structure (types)
 
@@ -149,23 +150,116 @@ npm run build
 npm run preview
 ```
 
-## 5. Available scripts
+## 5. Testing
+
+This project includes comprehensive testing to ensure quality and reliability.
+
+### Test Types
+
+#### Unit Tests (Vitest)
+
+Component and service-level tests with mocking.
+
+```bash
+# Run all unit tests
+npm run test:unit
+
+# Watch mode
+npm run test:unit:watch
+
+# With coverage
+npm run test:unit:coverage
+
+# UI mode
+npm run test:unit:ui
+```
+
+#### E2E Tests (Playwright)
+
+**End-to-end tests from user perspective** - verifying real user flows and interactions.
+
+**⚠️ IMPORTANT**: E2E tests require a running dev server on port 4321.
+
+**Recommended approach** (2 terminals):
+
+```bash
+# Terminal 1: Start dev server
+npm run dev
+
+# Terminal 2: Run tests
+npm run test:e2e
+```
+
+**Or use automatic mode** (Playwright starts server):
+
+```bash
+npm run test:e2e
+```
+
+**Other test commands:**
+
+```bash
+# Interactive UI mode
+npm run test:e2e:ui
+
+# With visible browser
+npm run test:e2e:headed
+
+# Debug mode
+npm run test:e2e:debug
+
+# View test report
+npm run test:e2e:report
+```
+
+**Windows PowerShell helper script:**
+
+```powershell
+.\test-e2e-with-server.ps1
+```
+
+**E2E Test Coverage:**
+
+- ✅ User authentication flow (login/register)
+- ✅ Dashboard and navigation
+- ✅ Complete user journey (homepage → exploration → interaction)
+- ✅ Form interactions and validation
+- ✅ Error handling and 404 pages
+- ✅ Responsiveness (desktop/mobile)
+
+**See [e2e/README.md](./e2e/README.md)** for detailed testing documentation.
+
+## 6. Available scripts
 
 From `package.json`:
+
+### Development
 
 - **`npm run dev`**: start Astro dev server
 - **`npm run build`**: build for production
 - **`npm run preview`**: preview the production build locally
+
+### Code Quality
+
 - **`npm run lint`**: run ESLint
 - **`npm run lint:fix`**: run ESLint with auto-fix
 - **`npm run format`**: format codebase using Prettier
+
+### Testing
+
+- **`npm run test`**: run all unit tests
 - **`npm run test:unit`**: run unit tests (Vitest)
 - **`npm run test:unit:watch`**: run unit tests in watch mode
+- **`npm run test:unit:ui`**: run unit tests with UI
+- **`npm run test:unit:coverage`**: run unit tests with coverage report
 - **`npm run test:e2e`**: run E2E tests (Playwright)
+- **`npm run test:e2e:ui`**: run E2E tests in interactive UI mode
+- **`npm run test:e2e:headed`**: run E2E tests with visible browser
+- **`npm run test:e2e:debug`**: debug E2E tests
 - **`npm run test:e2e:install`**: download Playwright browsers (first-time setup)
 - **`npm run test:e2e:report`**: open Playwright HTML report
 
-## 6. Project scope
+## 7. Project scope
 
 ### In scope (MVP)
 
@@ -214,7 +308,7 @@ From `package.json`:
 - Renaming collections/topics after creation
 - Nested collections, tags, extra hierarchy levels
 
-## 7. Project status
+## 8. Project status
 
 **MVP / in active development.**
 
@@ -223,6 +317,6 @@ Success metrics (as defined in PRD):
 - **AI acceptance rate target**: ≥ 75%
 - **AI usage share target**: ≥ 75%
 
-## 8. License
+## 9. License
 
 **TBD.** No license file is currently provided in this repository.
