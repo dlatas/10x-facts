@@ -1,5 +1,3 @@
-import * as React from "react";
-
 import type { CollectionDto } from "@/types";
 import { Button } from "@/components/ui/button";
 import { CreateCollectionInline } from "@/components/dashboard/CreateCollectionInline";
@@ -10,7 +8,8 @@ const RANDOM_COLLECTION_LABEL = "Kolekcja Losowa";
 
 function CollectionItem(props: { collection: CollectionDto }) {
   const isRandom = props.collection.system_key === RANDOM_SYSTEM_KEY;
-  const isSystem = props.collection.system_key != null;
+  const systemKey = props.collection.system_key;
+  const isSystem = systemKey != null;
   const displayName = isRandom ? RANDOM_COLLECTION_LABEL : props.collection.name;
   const href = `/collections/${encodeURIComponent(props.collection.id)}/topics?collectionName=${encodeURIComponent(displayName)}`;
 
@@ -18,12 +17,12 @@ function CollectionItem(props: { collection: CollectionDto }) {
     <li className="rounded-md">
       <a
         href={href}
-        className="flex items-center gap-2 truncate rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+        className="flex items-center gap-2 truncate rounded-md py-1 text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground"
       >
         <span className="truncate">
           {displayName}
         </span>
-        {isSystem ? <SystemBadge systemKey={props.collection.system_key} /> : null}
+        {isSystem ? <SystemBadge systemKey={systemKey} /> : null}
       </a>
     </li>
   );
@@ -50,7 +49,7 @@ export function DashboardSidebar(props: {
       <div className="rounded-2xl border bg-muted/40 p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold tracking-tight">Kolekcje</h2>
-        <Button variant="ghost" size="sm" asChild>
+        <Button variant="outline" size="sm" asChild>
           <a href="/collections" aria-label="Wszystkie kolekcje">
             Wszystkie
           </a>

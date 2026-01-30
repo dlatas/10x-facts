@@ -27,8 +27,11 @@ function DialogOverlay({ className, ...props }: React.ComponentPropsWithoutRef<t
 function DialogContent({
   className,
   children,
+  hideClose,
   ...props
-}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>) {
+}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+  hideClose?: boolean;
+}) {
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -46,21 +49,35 @@ function DialogContent({
         )}
         {...props}
       >
+        {hideClose ? null : (
+          <div className="flex justify-end -mt-2 -mb-2">
+            <DialogCloseButton />
+          </div>
+        )}
         {children}
-        <DialogPrimitive.Close
-          data-slot="dialog-close"
-          className={cn(
-            "absolute right-4 top-4 rounded-xs opacity-70 ring-offset-background transition-opacity",
-            "hover:opacity-100 focus:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
-            "disabled:pointer-events-none",
-            "data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
-          )}
-        >
-          <X className="h-4 w-4" />
-          <span className="sr-only">Zamknij</span>
-        </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPortal>
+  );
+}
+
+function DialogCloseButton({ className, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Close>) {
+  return (
+    <DialogPrimitive.Close
+      data-slot="dialog-close"
+      className={cn(
+        "inline-flex size-9 items-center justify-center rounded-md border bg-background shadow-xs ring-offset-background transition-colors",
+        "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+        "focus:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+        "disabled:pointer-events-none",
+        "data-[state=open]:bg-accent data-[state=open]:text-muted-foreground",
+        className
+      )}
+      aria-label="Zamknij"
+      {...props}
+    >
+      <X className="h-4 w-4" />
+      <span className="sr-only">Zamknij</span>
+    </DialogPrimitive.Close>
   );
 }
 
@@ -112,6 +129,7 @@ export {
   DialogTrigger,
   DialogPortal,
   DialogClose,
+  DialogCloseButton,
   DialogOverlay,
   DialogContent,
   DialogHeader,

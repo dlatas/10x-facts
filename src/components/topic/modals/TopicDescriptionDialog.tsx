@@ -2,7 +2,7 @@ import * as React from "react";
 import type { UseFormReturn } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogCloseButton, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export interface TopicDescriptionFormValues {
   description: string;
@@ -27,10 +27,16 @@ export function TopicDescriptionDialog(props: {
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Opis tematu</DialogTitle>
-          <DialogDescription>
+      <DialogContent
+        hideClose
+        className="max-h-[85vh] w-[calc(100%-2rem)] overflow-y-auto px-4 py-5 sm:max-w-2xl sm:px-6 sm:py-6"
+      >
+        <DialogHeader className="text-left">
+          <div className="flex items-start justify-between gap-3">
+            <DialogTitle className="min-w-0 flex-1">Opis tematu</DialogTitle>
+            <DialogCloseButton />
+          </div>
+          <DialogDescription className="text-left">
             Opis wpływa na jakość generowania AI. Zapis jest manualny.
           </DialogDescription>
         </DialogHeader>
@@ -95,7 +101,7 @@ export function TopicDescriptionDialog(props: {
             <p className="text-sm text-destructive">Nie udało się zapisać.</p>
           ) : null}
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"

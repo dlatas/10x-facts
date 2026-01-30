@@ -745,7 +745,7 @@ export function TopicClientInner(props: { topicId: string }) {
                     </div>
 
                     <div className="min-w-0">
-                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                      <p className="mt-1 line-clamp-2 text-sm leading-snug text-muted-foreground">
                         {f.back}
                       </p>
                     </div>

@@ -47,7 +47,7 @@ export const FlashcardPreviewCard = React.memo(function FlashcardPreviewCard(pro
     >
       <CardHeader className="p-4 pb-2">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="line-clamp-2">{props.flashcard.front}</CardTitle>
+          <CardTitle className="line-clamp-2 leading-snug">{props.flashcard.front}</CardTitle>
           {props.onToggleFavorite ? (
             <Button
               variant="outline"

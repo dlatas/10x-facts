@@ -1,8 +1,7 @@
-import * as React from "react";
 import { Heart } from "lucide-react";
 
 import type { FavoriteFlashcardDto } from "@/types";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogCloseButton, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
 export function FlashcardDetailsDialog(props: {
@@ -24,25 +23,46 @@ export function FlashcardDetailsDialog(props: {
         if (!next) onClose();
       }}
     >
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl md:max-w-3xl">
-        <DialogHeader>
-          <div className="flex items-start justify-between gap-3">
-            <DialogTitle className="min-w-0 flex-1">{flashcard?.front ?? ""}</DialogTitle>
-            {props.onToggleFavorite ? (
-              <Button
-                variant="outline"
-                size="icon"
-                disabled={props.isTogglingFavorite}
-                aria-label="Usuń z ulubionych"
-                aria-pressed={true}
-                title="Usuń z ulubionych"
-                onClick={() => props.onToggleFavorite?.()}
-              >
-                <Heart className="fill-red-500 text-red-500" />
-              </Button>
-            ) : null}
-          </div>
-          <DialogDescription className="whitespace-pre-wrap">{flashcard?.back ?? ""}</DialogDescription>
+      <DialogContent
+        hideClose
+        className="max-h-[85vh] w-[calc(100%-2rem)] overflow-y-auto px-4 py-5 sm:max-w-2xl sm:px-6 sm:py-6 md:max-w-3xl"
+      >
+        <DialogHeader className="text-left">
+          {props.onToggleFavorite ? (
+            <>
+              <div className="flex items-start justify-between gap-3">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={props.isTogglingFavorite}
+                  aria-label="Usuń z ulubionych"
+                  aria-pressed={true}
+                  title="Usuń z ulubionych"
+                  onClick={() => props.onToggleFavorite?.()}
+                >
+                  <Heart className="fill-red-500 text-red-500" />
+                </Button>
+                <DialogCloseButton />
+              </div>
+
+              <DialogTitle className="mt-3 text-left">{flashcard?.front ?? ""}</DialogTitle>
+              <DialogDescription className="whitespace-pre-wrap text-left">
+                {flashcard?.back ?? ""}
+              </DialogDescription>
+            </>
+          ) : (
+            <>
+              <div className="flex items-start justify-between gap-3">
+                <DialogTitle className="min-w-0 flex-1 text-left">
+                  {flashcard?.front ?? ""}
+                </DialogTitle>
+                <DialogCloseButton />
+              </div>
+              <DialogDescription className="whitespace-pre-wrap text-left">
+                {flashcard?.back ?? ""}
+              </DialogDescription>
+            </>
+          )}
         </DialogHeader>
       </DialogContent>
     </Dialog>

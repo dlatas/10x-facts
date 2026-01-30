@@ -22,10 +22,12 @@ export const CollectionRow = React.memo(function CollectionRow(props: Collection
         aria-label={`Otwórz kolekcję: ${props.item.name}`}
         className="absolute inset-0 z-0 rounded-xl focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
       />
-      <CardContent className="pointer-events-none relative z-10 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
+      <CardContent className="pointer-events-none relative z-10 flex items-center justify-between gap-3 p-4">
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="truncate font-medium">{props.item.name}</p>
+            <p className="font-medium leading-snug break-words whitespace-normal">
+              {props.item.name}
+            </p>
             <span
               className="inline-flex size-6 items-center justify-center rounded-full border bg-background text-xs font-semibold text-muted-foreground"
               title={`Liczba tematów: ${props.item.topicsCount}`}
@@ -37,7 +39,7 @@ export const CollectionRow = React.memo(function CollectionRow(props: Collection
           </div>
         </div>
 
-        <div className="pointer-events-auto relative z-20 flex items-center gap-2">
+        <div className="pointer-events-auto relative z-20 flex shrink-0 items-center gap-2">
           {canDelete ? (
             <Button
               variant="outline"

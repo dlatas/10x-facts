@@ -6,6 +6,7 @@ import type { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogCloseButton,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -51,10 +52,16 @@ export const CreateCollectionDialog = React.memo(function CreateCollectionDialog
         props.onOpenChange(open);
       }}
     >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Utwórz kolekcję</DialogTitle>
-          <DialogDescription>
+      <DialogContent
+        hideClose
+        className="max-h-[85vh] w-[calc(100%-2rem)] overflow-y-auto px-4 py-5 sm:max-w-lg sm:px-6 sm:py-6"
+      >
+        <DialogHeader className="text-left">
+          <div className="flex items-start justify-between gap-3">
+            <DialogTitle className="min-w-0 flex-1">Utwórz kolekcję</DialogTitle>
+            <DialogCloseButton />
+          </div>
+          <DialogDescription className="text-left">
             Podaj nazwę nowej kolekcji. Nazwa musi być unikalna.
           </DialogDescription>
         </DialogHeader>
@@ -85,7 +92,7 @@ export const CreateCollectionDialog = React.memo(function CreateCollectionDialog
             ) : null}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"

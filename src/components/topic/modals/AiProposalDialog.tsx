@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogCloseButton, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export interface AiLimitVm {
   remaining: number;
@@ -30,10 +30,16 @@ export function AiProposalDialog(props: {
         if (!open) props.onClose();
       }}
     >
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl md:max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Propozycja AI</DialogTitle>
-          <DialogDescription>
+      <DialogContent
+        hideClose
+        className="max-h-[85vh] w-[calc(100%-2rem)] overflow-y-auto px-4 py-5 sm:max-w-2xl sm:px-6 sm:py-6 md:max-w-3xl"
+      >
+        <DialogHeader className="text-left">
+          <div className="flex items-start justify-between gap-3">
+            <DialogTitle className="min-w-0 flex-1">Propozycja AI</DialogTitle>
+            <DialogCloseButton />
+          </div>
+          <DialogDescription className="text-left">
             {props.limit ? (
               <span>
                 Pozostałe decyzje: <strong>{props.limit.remaining}</strong> (reset:{' '}
@@ -60,7 +66,7 @@ export function AiProposalDialog(props: {
           <p className="text-sm text-muted-foreground">Brak danych propozycji.</p>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-0">
           <Button type="button" variant="outline" onClick={props.onClose} disabled={isBusy}>
             Zamknij
           </Button>

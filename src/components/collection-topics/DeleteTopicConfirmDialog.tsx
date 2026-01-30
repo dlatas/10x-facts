@@ -4,6 +4,7 @@ import type { DeleteTopicConfirmDialogProps } from '@/components/collection-topi
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogCloseButton,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -22,10 +23,16 @@ export const DeleteTopicConfirmDialog = React.memo(function DeleteTopicConfirmDi
         props.onOpenChange(open);
       }}
     >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Usunąć temat?</DialogTitle>
-          <DialogDescription>
+      <DialogContent
+        hideClose
+        className="max-h-[85vh] w-[calc(100%-2rem)] overflow-y-auto px-4 py-5 sm:max-w-lg sm:px-6 sm:py-6"
+      >
+        <DialogHeader className="text-left">
+          <div className="flex items-start justify-between gap-3">
+            <DialogTitle className="min-w-0 flex-1">Usunąć temat?</DialogTitle>
+            <DialogCloseButton />
+          </div>
+          <DialogDescription className="text-left">
             Ta operacja jest nieodwracalna. Usunięcie tematu spowoduje także kaskadowe
             usunięcie powiązanych fiszek.
           </DialogDescription>
@@ -36,7 +43,7 @@ export const DeleteTopicConfirmDialog = React.memo(function DeleteTopicConfirmDi
           <p className="font-medium">{props.topicName ?? '—'}</p>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-0">
           <Button
             type="button"
             variant="outline"

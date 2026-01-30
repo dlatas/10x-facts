@@ -7,6 +7,7 @@ import type { CreateTopicDialogProps } from '@/components/collection-topics/coll
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogCloseButton,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -46,10 +47,16 @@ export const CreateTopicDialog = React.memo(function CreateTopicDialog(
         props.onOpenChange(open);
       }}
     >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Utwórz temat</DialogTitle>
-          <DialogDescription>
+      <DialogContent
+        hideClose
+        className="max-h-[85vh] w-[calc(100%-2rem)] overflow-y-auto px-4 py-5 sm:max-w-lg sm:px-6 sm:py-6"
+      >
+        <DialogHeader className="text-left">
+          <div className="flex items-start justify-between gap-3">
+            <DialogTitle className="min-w-0 flex-1">Utwórz temat</DialogTitle>
+            <DialogCloseButton />
+          </div>
+          <DialogDescription className="text-left">
             Podaj nazwę nowego tematu. Opis możesz uzupełnić później.
           </DialogDescription>
         </DialogHeader>
@@ -79,7 +86,7 @@ export const CreateTopicDialog = React.memo(function CreateTopicDialog(
             ) : null}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"

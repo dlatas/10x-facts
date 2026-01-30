@@ -2,7 +2,7 @@ import type * as React from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogCloseButton, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import type { FlashcardFormValues } from '@/components/topic/modals/CreateFlashcardDialog';
 
@@ -16,10 +16,16 @@ export function EditFlashcardDialog(props: {
 }) {
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edytuj fiszkę</DialogTitle>
-          <DialogDescription>Źródło jest tylko do odczytu.</DialogDescription>
+      <DialogContent
+        hideClose
+        className="max-h-[85vh] w-[calc(100%-2rem)] overflow-y-auto px-4 py-5 sm:max-w-2xl sm:px-6 sm:py-6"
+      >
+        <DialogHeader className="text-left">
+          <div className="flex items-start justify-between gap-3">
+            <DialogTitle className="min-w-0 flex-1">Edytuj fiszkę</DialogTitle>
+            <DialogCloseButton />
+          </div>
+          <DialogDescription className="text-left">Źródło jest tylko do odczytu.</DialogDescription>
         </DialogHeader>
 
         <form className="space-y-3" onSubmit={props.onSubmit} noValidate>
@@ -74,7 +80,7 @@ export function EditFlashcardDialog(props: {
             </p>
           ) : null}
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"

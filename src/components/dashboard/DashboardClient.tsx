@@ -65,12 +65,9 @@ export function DashboardClient() {
             </p>
           </div>
 
-            <Button
-              variant="default"
-              size="sm"
-            >
-              <a href="/favorites">Wszystkie ulubione</a>
-            </Button>
+          <Button variant="default" size="sm" asChild>
+            <a href="/favorites">Wszystkie ulubione</a>
+          </Button>
         </div>
 
         {error ? (

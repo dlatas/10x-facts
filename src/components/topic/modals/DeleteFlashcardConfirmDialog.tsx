@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogCloseButton, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function DeleteFlashcardConfirmDialog(props: {
   open: boolean;
@@ -18,10 +18,16 @@ export function DeleteFlashcardConfirmDialog(props: {
         props.onOpenChange(open);
       }}
     >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Usunąć fiszkę?</DialogTitle>
-          <DialogDescription>Ta operacja jest nieodwracalna.</DialogDescription>
+      <DialogContent
+        hideClose
+        className="max-h-[85vh] w-[calc(100%-2rem)] overflow-y-auto px-4 py-5 sm:max-w-lg sm:px-6 sm:py-6"
+      >
+        <DialogHeader className="text-left">
+          <div className="flex items-start justify-between gap-3">
+            <DialogTitle className="min-w-0 flex-1">Usunąć fiszkę?</DialogTitle>
+            <DialogCloseButton />
+          </div>
+          <DialogDescription className="text-left">Ta operacja jest nieodwracalna.</DialogDescription>
         </DialogHeader>
 
         <div className="rounded-md border bg-muted/30 p-3 text-sm">
@@ -29,7 +35,7 @@ export function DeleteFlashcardConfirmDialog(props: {
           <p className="font-medium">{props.flashcardFront ?? "—"}</p>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-0">
           <Button
             type="button"
             variant="outline"
