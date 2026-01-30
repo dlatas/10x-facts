@@ -21,7 +21,7 @@ export async function POST(context: APIContext): Promise<Response> {
   if (!auth.ok) return auth.response;
   const userId = auth.userId;
 
-  // 2) Parse + validate body
+  // 2) Parse and validate body
   const body = await readJsonBody(context);
   if (!body.ok) return body.response;
 
@@ -102,7 +102,10 @@ export async function POST(context: APIContext): Promise<Response> {
       apiKey,
       model,
       topic: isRandom
-        ? { name: randomDomain?.title ?? 'Temat Losowy', description: randomDomain?.description ?? '' }
+        ? {
+            name: randomDomain?.title ?? 'Temat Losowy',
+            description: randomDomain?.description ?? '',
+          }
         : { name: topic.name, description: topic.description },
       avoidFronts,
     });
@@ -111,7 +114,10 @@ export async function POST(context: APIContext): Promise<Response> {
         apiKey,
         model,
         topic: isRandom
-          ? { name: randomDomain?.title ?? 'Temat Losowy', description: randomDomain?.description ?? '' }
+          ? {
+              name: randomDomain?.title ?? 'Temat Losowy',
+              description: randomDomain?.description ?? '',
+            }
           : { name: topic.name, description: topic.description },
         avoidFronts,
       });
@@ -121,7 +127,10 @@ export async function POST(context: APIContext): Promise<Response> {
         apiKey,
         model,
         topic: isRandom
-          ? { name: randomDomain?.title ?? 'Temat Losowy', description: randomDomain?.description ?? '' }
+          ? {
+              name: randomDomain?.title ?? 'Temat Losowy',
+              description: randomDomain?.description ?? '',
+            }
           : { name: topic.name, description: topic.description },
         avoidFronts,
       });
