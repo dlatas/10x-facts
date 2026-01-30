@@ -277,7 +277,7 @@ export function FavoritesClient() {
             </label>
             <select
               id="favorites-collection"
-              className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-9 w-full rounded-md border bg-background px-3 text-base outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
               value={selectedCollectionId}
               disabled={isLoadingCollections || collections.length === 0}
               onChange={(e) => {
@@ -300,7 +300,7 @@ export function FavoritesClient() {
             </label>
             <select
               id="favorites-topic"
-              className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-9 w-full rounded-md border bg-background px-3 text-base outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
               value={selectedTopicId}
               disabled={isLoadingTopics || topics.length === 0}
               onChange={(e) => setSelectedTopicId(e.currentTarget.value)}

@@ -61,7 +61,7 @@ export function CreateFlashcardDialog(props: {
             <textarea
               id="create-back"
               disabled={props.isPending}
-              className="min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-base shadow-xs focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50"
               aria-invalid={Boolean(props.form.formState.errors.back) || undefined}
               aria-describedby={
                 props.form.formState.errors.back ? 'create-back-error' : undefined

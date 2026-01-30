@@ -1,21 +1,31 @@
 ---
-import "@/styles/global.css";
-import { Toaster } from "@/components/ui/sonner";
+import '@/styles/global.css';
+import { Toaster } from '@/components/ui/sonner';
 
 interface Props {
   title?: string;
 }
 
-const { title = "10x Facts" } = Astro.props;
+const { title = '10x Facts' } = Astro.props;
 ---
 
 <!doctype html>
 <html lang="pl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <meta name="generator" content={Astro.generator} />
+    <meta
+      name="viewport"
+      content="width=device-width"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="/FavIco.png"
+    />
+    <meta
+      name="generator"
+      content={Astro.generator}
+    />
     <title>{title}</title>
   </head>
   <body>

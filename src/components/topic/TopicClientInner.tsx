@@ -135,8 +135,8 @@ export function TopicClientInner(props: { topicId: string }) {
       raw.trim().toLowerCase() === 'example description.' ? '' : raw;
     descriptionForm.reset({ description: cleaned });
     descriptionForm.clearErrors();
-    if (descriptionStatus !== 'idle') setDescriptionStatus('idle');
-  }, [descriptionForm, descriptionStatus, topicQuery.data]);
+    setDescriptionStatus((prev) => (prev === 'idle' ? prev : 'idle'));
+  }, [descriptionForm, topicQuery.data]);
 
   const flashcardsQuery = useQuery({
     queryKey: [
@@ -179,6 +179,7 @@ export function TopicClientInner(props: { topicId: string }) {
     onSuccess: () => {
       setDescriptionStatus('saved');
       toast.success('Zapisano opis tematu.');
+      setDescriptionOpen(false);
       void queryClient.invalidateQueries({ queryKey: TOPIC_QUERY_KEY });
     },
     onError: (e) => {
@@ -562,13 +563,12 @@ export function TopicClientInner(props: { topicId: string }) {
         />
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" onClick={() => setCreateOpen(true)}>
+          <Button type="button" variant="secondary" onClick={() => setCreateOpen(true)}>
             Dodaj fiszkę
           </Button>
           <span className="inline-block" title={aiBlockedTooltip}>
             <Button
               type="button"
-              variant="secondary"
               onClick={() => void onAiGenerateClick()}
               disabled={
                 aiGenerateMutation.isPending || isAiBlockedByMissingDescription
@@ -578,6 +578,11 @@ export function TopicClientInner(props: { topicId: string }) {
             </Button>
           </span>
         </div>
+        {isAiBlockedByMissingDescription ? (
+          <p className="text-xs text-destructive sm:hidden">
+            * {aiBlockedTooltip}
+          </p>
+        ) : null}
 
         {flashcardsQuery.isLoading ? (
           <div className="space-y-3" aria-busy="true" aria-live="polite">
@@ -626,10 +631,11 @@ export function TopicClientInner(props: { topicId: string }) {
                   </Button>
                 ) : (
                   <>
-                    <Button onClick={() => setCreateOpen(true)}>Dodaj fiszkę</Button>
+                    <Button variant="secondary" onClick={() => setCreateOpen(true)}>
+                      Dodaj fiszkę
+                    </Button>
                     <span className="inline-block" title={aiBlockedTooltip}>
                       <Button
-                        variant="secondary"
                         onClick={() => void onAiGenerateClick()}
                         disabled={
                           aiGenerateMutation.isPending ||
@@ -642,6 +648,11 @@ export function TopicClientInner(props: { topicId: string }) {
                   </>
                 )}
               </div>
+              {isAiBlockedByMissingDescription ? (
+                <p className="mt-2 text-xs text-destructive sm:hidden">
+                  * {aiBlockedTooltip}
+                </p>
+              ) : null}
             </CardContent>
           </Card>
         ) : (
