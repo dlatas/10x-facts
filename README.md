@@ -50,7 +50,7 @@ Additional docs:
 - **Testing (unit/component)**: Vitest, React Testing Library, MSW
 - **Testing (E2E)**: Playwright
 - **CI/CD**: GitHub Actions
-- **Hosting**: DigitalOcean (Docker-based deployment)
+- **Hosting**: Cloudflare Pages (Astro app) + Cloudflare Functions (API endpoints)
 
 ## Project structure (types)
 
