@@ -59,14 +59,7 @@ export async function ensureRandomTopicForCollection(args: {
   if (error) throw error;
   if (data?.id) {
     if (data.collection_id !== args.collectionId) {
-      console.error(
-        '[ensureRandomTopicForCollection] random_topic in other collection',
-        {
-          userId: args.userId,
-          expectedCollectionId: args.collectionId,
-          actualCollectionId: data.collection_id,
-        }
-      );
+      throw new Error('Temat losowy jest już w innej kolekcji.');
     }
     return;
   }
@@ -121,7 +114,8 @@ export async function listTopicsInCollection(
     };
 
     const flashcards_count =
-      Array.isArray(r.flashcards) && typeof r.flashcards?.[0]?.count === 'number'
+      Array.isArray(r.flashcards) &&
+      typeof r.flashcards?.[0]?.count === 'number'
         ? r.flashcards[0].count
         : 0;
 

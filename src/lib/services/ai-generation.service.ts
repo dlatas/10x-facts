@@ -407,7 +407,7 @@ export async function generateProposalViaOpenRouter(args: {
           timeoutMs: Math.min(12_000, timeoutMs),
         });
       } catch {
-        console.error('Failed to shorten back via OpenRouter');
+        throw new Error('Błąd podczas skracania tekstu AI.');
       }
     }
 

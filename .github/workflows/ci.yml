@@ -53,6 +53,14 @@ jobs:
   build:
     name: Production Build
     runs-on: ubuntu-latest
+    env:
+      # Astro validates env vars during build when using `env.schema`.
+      # Prefer GitHub Actions Secrets/Vars; fall back to placeholders for PRs/forks.
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || 'http://localhost:54321' }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY || vars.SUPABASE_KEY || 'anon-key-placeholder' }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || vars.OPENROUTER_API_KEY || 'openrouter-key-placeholder' }}
+      OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL || 'openai/gpt-4o-mini' }}
+      AI_DAILY_EVENT_LIMIT: ${{ vars.AI_DAILY_EVENT_LIMIT || '5' }}
 
     steps:
       - name: Checkout repository

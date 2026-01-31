@@ -10,7 +10,10 @@ import {
   FlashcardsServiceError,
   updateFlashcard,
 } from '@/lib/services/flashcards.service';
-import type { DeleteFlashcardResponseDto, UpdateFlashcardResponseDto } from '@/types';
+import type {
+  DeleteFlashcardResponseDto,
+  UpdateFlashcardResponseDto,
+} from '@/types';
 
 export const prerender = false;
 
@@ -71,15 +74,12 @@ export async function PATCH(context: APIContext): Promise<Response> {
     return json(response, { status: 200 });
   } catch (err) {
     if (err instanceof FlashcardsServiceError) {
-      if (err.kind === 'flashcard_not_found') return jsonError(404, err.message);
-      if (err.kind === 'forbidden_source_change') return jsonError(403, err.message);
+      if (err.kind === 'flashcard_not_found')
+        return jsonError(404, err.message);
+      if (err.kind === 'forbidden_source_change')
+        return jsonError(403, err.message);
     }
 
-    console.error('[PATCH /flashcards/:flashcardId] updateFlashcard', {
-      userId: auth.userId,
-      flashcardId: flashcardIdParsed.data,
-      err,
-    });
     return jsonError(500, 'Błąd podczas aktualizacji fiszki.');
   }
 }
@@ -115,16 +115,13 @@ export async function DELETE(context: APIContext): Promise<Response> {
     const response: DeleteFlashcardResponseDto = { ok: true };
     return json(response, { status: 200 });
   } catch (err) {
-    if (err instanceof FlashcardsServiceError && err.kind === 'flashcard_not_found') {
+    if (
+      err instanceof FlashcardsServiceError &&
+      err.kind === 'flashcard_not_found'
+    ) {
       return jsonError(404, err.message);
     }
 
-    console.error('[DELETE /flashcards/:flashcardId] deleteFlashcard', {
-      userId: auth.userId,
-      flashcardId: flashcardIdParsed.data,
-      err,
-    });
     return jsonError(500, 'Błąd podczas usuwania fiszki.');
   }
 }
-

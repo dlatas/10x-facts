@@ -124,15 +124,7 @@ export async function GET(context: APIContext): Promise<Response> {
     };
     return json(response, { status: 200 });
   } catch (err) {
-    console.error(
-      '[GET /collections/:collectionId/topics] listTopicsInCollection',
-      {
-        userId: auth.userId,
-        collectionId: collection.id,
-        err,
-      }
-    );
-    return jsonError(500, 'Błąd podczas listowania tematów.');
+    return jsonError(500, 'Błąd podczas listowania tematów - ' + err);
   }
 }
 
@@ -173,14 +165,7 @@ export async function POST(context: APIContext): Promise<Response> {
     ) {
       return jsonError(404, err.message);
     }
-    console.error(
-      '[POST /collections/:collectionId/topics] getCollectionOr404',
-      {
-        userId: auth.userId,
-        collectionId: collectionIdParsed.data,
-        err,
-      }
-    );
+
     return jsonError(500, 'Błąd podczas pobierania kolekcji.');
   }
 
@@ -220,14 +205,7 @@ export async function POST(context: APIContext): Promise<Response> {
     if (isUniqueViolation(err)) {
       return jsonError(409, 'Temat o tej nazwie już istnieje w tej kolekcji.');
     }
-    console.error(
-      '[POST /collections/:collectionId/topics] createTopicInCollection',
-      {
-        userId: auth.userId,
-        collectionId: collectionIdParsed.data,
-        err,
-      }
-    );
+
     return jsonError(500, 'Błąd podczas tworzenia tematu.');
   }
 }

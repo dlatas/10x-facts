@@ -40,11 +40,6 @@ export async function GET(context: APIContext): Promise<Response> {
     const response: FavoritesRandomResponseDto = { items };
     return json(response, { status: 200 });
   } catch (err) {
-    console.error('[GET /flashcards/favorites/random] getRandomFavoriteFlashcards', {
-      userId: auth.userId,
-      err,
-    });
-    return jsonError(500, 'Błąd podczas pobierania ulubionych fiszek.');
+    return jsonError(500, 'Błąd podczas pobierania ulubionych fiszek - ' + err);
   }
 }
-
