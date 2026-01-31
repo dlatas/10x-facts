@@ -45,14 +45,13 @@ export async function GET(context: APIContext): Promise<Response> {
       topicId: topicIdParsed.data,
     });
   } catch (err) {
-    if (err instanceof FlashcardsServiceError && err.kind === 'topic_not_found') {
+    if (
+      err instanceof FlashcardsServiceError &&
+      err.kind === 'topic_not_found'
+    ) {
       return jsonError(404, err.message);
     }
-    console.error('[GET /topics/:topicId/flashcards] getTopicOrThrowNotFound', {
-      userId: auth.userId,
-      topicId: topicIdParsed.data,
-      err,
-    });
+
     return jsonError(500, 'Błąd podczas pobierania tematu.');
   }
 
@@ -92,12 +91,7 @@ export async function GET(context: APIContext): Promise<Response> {
     };
     return json(response, { status: 200 });
   } catch (err) {
-    console.error('[GET /topics/:topicId/flashcards] listFlashcardsInTopic', {
-      userId: auth.userId,
-      topicId: topicIdParsed.data,
-      err,
-    });
-    return jsonError(500, 'Błąd podczas listowania fiszek.');
+    return jsonError(500, 'Błąd podczas listowania fiszek - ' + err);
   }
 }
 
@@ -127,15 +121,14 @@ export async function POST(context: APIContext): Promise<Response> {
       topicId: topicIdParsed.data,
     });
   } catch (err) {
-    if (err instanceof FlashcardsServiceError && err.kind === 'topic_not_found') {
+    if (
+      err instanceof FlashcardsServiceError &&
+      err.kind === 'topic_not_found'
+    ) {
       return jsonError(404, err.message);
     }
-    console.error('[POST /topics/:topicId/flashcards] getTopicOrThrowNotFound', {
-      userId: auth.userId,
-      topicId: topicIdParsed.data,
-      err,
-    });
-    return jsonError(500, 'Błąd podczas pobierania tematu.');
+
+    return jsonError(500, 'Błąd podczas pobierania tematu - ' + err);
   }
 
   // 4) Parse + validate body
@@ -165,12 +158,6 @@ export async function POST(context: APIContext): Promise<Response> {
     const response: CreateFlashcardResponseDto = created;
     return json(response, { status: 201 });
   } catch (err) {
-    console.error('[POST /topics/:topicId/flashcards] createManualFlashcard', {
-      userId: auth.userId,
-      topicId: topicIdParsed.data,
-      err,
-    });
-    return jsonError(500, 'Błąd podczas tworzenia fiszki.');
+    return jsonError(500, 'Błąd podczas tworzenia fiszki - ' + err);
   }
 }
-

@@ -73,12 +73,7 @@ export async function PATCH(context: APIContext): Promise<Response> {
       return jsonError(403, 'Nie można edytować opisu dla tematu losowego.');
     }
   } catch (err) {
-    console.error('[PATCH /topics/:topicId] readTopicForRandomGuard', {
-      userId: auth.userId,
-      topicId: topicIdParsed.data,
-      err,
-    });
-    return jsonError(500, 'Błąd podczas weryfikacji tematu.');
+    return jsonError(500, 'Błąd podczas weryfikacji tematu - ' + err);
   }
 
   // 4) Update
@@ -96,11 +91,7 @@ export async function PATCH(context: APIContext): Promise<Response> {
     if (err instanceof TopicsServiceError && err.kind === 'topic_not_found') {
       return jsonError(404, err.message);
     }
-    console.error('[PATCH /topics/:topicId] updateTopicDescription', {
-      userId: auth.userId,
-      topicId: topicIdParsed.data,
-      err,
-    });
+
     return jsonError(500, 'Błąd podczas aktualizacji tematu.');
   }
 }
@@ -130,18 +121,16 @@ export async function DELETE(context: APIContext): Promise<Response> {
       userId: auth.userId,
       topicId: topicIdParsed.data,
     });
+
     const response: DeleteTopicResponseDto = { ok: true };
+
     return json(response, { status: 200 });
   } catch (err) {
     if (err instanceof TopicsServiceError) {
       if (err.kind === 'forbidden_system') return jsonError(403, err.message);
       if (err.kind === 'topic_not_found') return jsonError(404, err.message);
     }
-    console.error('[DELETE /topics/:topicId] deleteTopic', {
-      userId: auth.userId,
-      topicId: topicIdParsed.data,
-      err,
-    });
+
     return jsonError(500, 'Błąd podczas usuwania tematu.');
   }
 }

@@ -88,7 +88,7 @@ export function FavoritesClient() {
     } finally {
       setIsLoadingCollections(false);
     }
-  }, [collectionsService, selectedCollectionId]);
+  }, [collectionsService, ]);
 
   const refreshTopics = useCallback(async () => {
     if (!selectedCollectionId) {
@@ -224,7 +224,7 @@ export function FavoritesClient() {
 
   useEffect(() => {
     void refreshCollections();
-  }, []);
+  }, [refreshCollections]);
 
   useEffect(() => {
     void refreshTopics();

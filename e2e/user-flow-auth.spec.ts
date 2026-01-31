@@ -41,9 +41,7 @@ test.describe('User Authentication Flow', () => {
       await expect(passwordField.first()).toBeVisible();
     } else {
       // Jeśli brak linku rejestracji, test przechodzi (może być inna implementacja)
-      console.log(
-        'Register link not found on homepage - skipping navigation test'
-      );
+      // Brak linku rejestracji (różne implementacje) — nie jest to błąd testu.
     }
   });
 

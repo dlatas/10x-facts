@@ -26,7 +26,7 @@ test.describe('Smoke Tests', () => {
     // Sprawdź, czy strona ma jakąś zawartość
     const bodyContent = await page.textContent('body');
     expect(bodyContent).toBeTruthy();
-    expect(bodyContent!.trim().length).toBeGreaterThan(0);
+    expect(bodyContent?.trim().length ?? 0).toBeGreaterThan(0);
   });
 
   test('app has valid HTML structure', async ({ page }) => {
